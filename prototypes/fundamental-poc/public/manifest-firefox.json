@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "supertab@example.com"
+    }
+  },
+  "name": "Super Tab",
+  "version": "1.0.0",
+  "description": "High-performance command palette for tab management with Shadow DOM CSS isolation.",
+  "permissions": ["tabs", "<all_urls>"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ]
+}
