@@ -38,13 +38,13 @@
 
 {#if store.visible}
   <div
-    class="st-overlay"
+    class="overlay"
     role="button"
     tabindex="0"
     onclick={(e) => { if (e.target === e.currentTarget) store.close(); }}
     onkeydown={(e) => e.key === 'Enter' && store.close()}
   >
-    <div class="st-popup" role="dialog" aria-modal="true" tabindex="-1">
+    <div class="popup" role="dialog" aria-modal="true" tabindex="-1">
       <CommandPalette
         results={store.results}
         bind:query={store.query}
@@ -52,7 +52,7 @@
         {onSelect}
       />
       {#if store.error}
-        <div class="st-error">{store.error}</div>
+        <div class="error">{store.error}</div>
       {/if}
     </div>
   </div>

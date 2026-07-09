@@ -22,8 +22,8 @@
 </script>
 
 {#if isLoading}
-  <div class="st-header">
-    <span class="st-loading">Loading…</span>
+  <div class="header">
+    <span class="loading">Loading…</span>
   </div>
 {/if}
 
@@ -32,26 +32,26 @@
   bind:value={query}
   type="text"
   placeholder="Search tabs…"
-  class="st-input"
+  class="input"
 />
 
-<div class="st-list">
+<div class="list">
   {#each results as item (item.id)}
-    <button type="button" class="st-item" onclick={() => onSelect(item)}>
+    <button type="button" class="item" onclick={() => onSelect(item)}>
       {#if item.favIconUrl}
         <img
-          class="st-favicon"
+          class="favicon"
           src={item.favIconUrl}
           alt=""
           onerror={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
         />
       {/if}
-      <div class="st-text">
-        <div class="st-title">{item.title}</div>
-        <div class="st-url">{item.url}</div>
+      <div class="text">
+        <div class="title">{item.title}</div>
+        <div class="url">{item.url}</div>
       </div>
     </button>
   {:else}
-    <div class="st-empty">No results found</div>
+    <div class="empty">No results found</div>
   {/each}
 </div>
