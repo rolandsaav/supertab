@@ -3,8 +3,8 @@ import { store } from '../ui/stores.svelte';
 
 const HOST_ID = 'supertab-host';
 
-/** Key (with Cmd or Ctrl) that opens the palette. */
-const OPEN_KEY = 'k';
+/** Key that opens the palette. */
+const OPEN_KEY = 'F2';
 
 console.log('[SuperTab] Content script loaded');
 
@@ -58,8 +58,8 @@ function handleKeyDown(e: KeyboardEvent): void {
     return;
   }
 
-  // Palette is closed: Cmd/Ctrl+<OPEN_KEY> opens it.
-  const isOpenHotkey = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === OPEN_KEY;
+  // Palette is closed: <OPEN_KEY> opens it.
+  const isOpenHotkey = e.key === OPEN_KEY;
   if (isOpenHotkey) {
     e.preventDefault();
     e.stopPropagation();
