@@ -1,0 +1,152 @@
+/**
+ * Palette styles.
+ *
+ * Imported as a string (`?inline`) and injected into the Shadow Root by
+ * mount.ts. The shadow boundary provides isolation, so plain class selectors
+ * are safe — no Svelte scoping needed.
+ */
+
+/* ── Design tokens ────────────────────────────────────────────────────────── */
+/* Defined on the shadow host so they cascade into the whole palette. Change a
+   color here and it updates everywhere it is used. */
+
+:host {
+  --st-bg: #181825;
+  --st-border: #313244;
+  --st-text: #cdd6f4;
+  --st-text-muted: #6c7086;
+  --st-error: #f38ba8;
+}
+
+/* ── Overlay & popup (App.svelte) ─────────────────────────────────────────── */
+
+.st-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 12vh;
+  /* No z-index needed: the shadow host (content.ts) already owns the top layer;
+     inside the shadow root the overlay has no siblings to stack against. */
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    Roboto, Helvetica, Arial, sans-serif;
+}
+
+.st-popup {
+  width: 600px;
+  max-width: 92vw;
+  background: var(--st-bg);
+  border: 1px solid var(--st-border);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.st-error {
+  padding: 12px 20px;
+  color: var(--st-error);
+  font-size: 13px;
+  border-top: 1px solid var(--st-border);
+}
+
+/* ── Command palette (CommandPalette.svelte) ──────────────────────────────── */
+
+.st-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px 0;
+  gap: 12px;
+}
+
+.st-loading {
+  font-size: 12px;
+  color: var(--st-text-muted);
+}
+
+.st-input {
+  width: 100%;
+  padding: 16px 20px;
+  font-size: 18px;
+  color: var(--st-text);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--st-border);
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.st-input::placeholder {
+  color: var(--st-text-muted);
+}
+
+.st-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.st-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 20px;
+  border: none;
+  border-top: 1px solid var(--st-border);
+  background: none;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.08s ease;
+}
+
+.st-item:first-child {
+  border-top: none;
+}
+
+.st-item:hover,
+.st-item:focus-visible {
+  background: var(--st-border);
+  outline: none;
+}
+
+.st-favicon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  border-radius: 2px;
+}
+
+.st-text {
+  min-width: 0;
+}
+
+.st-title {
+  color: var(--st-text);
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.st-url {
+  color: var(--st-text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.st-empty {
+  padding: 20px;
+  color: var(--st-text-muted);
+  font-size: 14px;
+  text-align: center;
+}

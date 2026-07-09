@@ -1,0 +1,26 @@
+{
+  "name": "supertab",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build && vite build --config vite.background.config.js",
+    "postbuild": "cp public/manifest-chrome.json dist/manifest.json",
+    "build:firefox": "vite build && vite build --config vite.background.config.js && cp public/manifest-firefox.json dist/manifest.json",
+    "dev": "vite build --watch --mode development",
+    "check": "svelte-check"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^4.0.0",
+    "@types/webextension-polyfill": "^0.12.5",
+    "svelte": "^5.0.0",
+    "svelte-check": "^4.0.0",
+    "typescript": "~6.0.3",
+    "vite": "^5.0.0"
+  },
+  "dependencies": {
+    "@lucide/svelte": "^1.16.0",
+    "fuse.js": "^7.0.0",
+    "webextension-polyfill": "^0.12.0"
+  }
+}
