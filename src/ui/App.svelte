@@ -1,8 +1,11 @@
 <script lang="ts">
   import { store } from './stores.svelte';
-  import { getTabs, activateTab } from '../bridge/background-bridge';
+  import { activateTab } from '../bridge/background-bridge';
   import CommandPalette from './CommandPalette.svelte';
+  import ActionsPanel from './ActionsPanel.svelte';
   import type { Item } from '../search/parsers';
+
+  const highlighted = $derived(store.results.find((i) => i.id === store.highlightedId));
 
   /**
    * Refetch tabs on every open so recency ordering (`lastAccessed`) reflects
@@ -11,23 +14,9 @@
    */
   $effect(() => {
     if (store.visible) {
-      fetchAll();
+      void store.refetch();
     }
   });
-
-  async function fetchAll() {
-    store.isLoading = true;
-    store.error = '';
-    try {
-      const tabs = await getTabs();
-      store.setTabs(tabs);
-    } catch (err) {
-      store.error = err instanceof Error ? err.message : 'Failed to load data';
-      console.error('[SuperTab]', err);
-    } finally {
-      store.isLoading = false;
-    }
-  }
 
   /** Activate the selected tab. */
   function onSelect(item: Item) {
@@ -42,15 +31,24 @@
     role="button"
     tabindex="0"
     onclick={(e) => { if (e.target === e.currentTarget) store.close(); }}
-    onkeydown={(e) => e.key === 'Enter' && store.close()}
+    onkeydown={(e) => { if (e.key === 'Enter' && e.target === e.currentTarget) store.close(); }}
   >
     <div class="popup" role="dialog" aria-modal="true" tabindex="-1">
       <CommandPalette
         results={store.results}
         bind:query={store.query}
+        bind:highlightedId={store.highlightedId}
+        active={store.mode === 'list'}
         isLoading={store.isLoading}
         {onSelect}
+        onActions={() => store.openActions()}
       />
+      {#if store.mode === 'actions' && highlighted}
+        <ActionsPanel
+          item={highlighted}
+          onRun={(action) => highlighted && store.runAction(action, highlighted)}
+        />
+      {/if}
       {#if store.error}
         <div class="error">{store.error}</div>
       {/if}

@@ -19,6 +19,9 @@ class PaletteStore {
   /** Which surface has focus: the result list, or the actions panel. */
   mode = $state<'list' | 'actions'>('list');
 
+  /** `id` of the currently highlighted result. */
+  highlightedId = $state('');
+
   /** Fuse index, rebuilt automatically whenever `tabs` changes. */
   #index = $derived(buildIndex(this.tabs));
 
@@ -30,6 +33,7 @@ class PaletteStore {
     this.query = '';
     this.error = '';
     this.mode = 'list';
+    this.highlightedId = '';
     this.visible = true;
   }
 

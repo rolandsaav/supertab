@@ -1,34 +1,51 @@
 <script lang="ts">
   import { Command } from 'bits-ui';
   import type { Item } from '../search/parsers';
+  import { tabNav, autofocus } from './utils.svelte';
+  import { isMac } from '../platform';
 
   interface Props {
     results: Item[];
     query: string;
+    highlightedId: string;
+    active: boolean;
     isLoading: boolean;
     onSelect: (item: Item) => void;
+    onActions: () => void;
   }
 
-  let { results, query = $bindable(), isLoading, onSelect }: Props = $props();
+  let {
+    results,
+    query = $bindable(),
+    highlightedId = $bindable(),
+    active,
+    isLoading,
+    onSelect,
+    onActions
+  }: Props = $props();
 
   let inputRef = $state<HTMLInputElement | null>(null);
 
-  $effect(() => {
-    if (inputRef) {
-      requestAnimationFrame(() => inputRef?.focus());
-    }
-  });
+  autofocus(() => inputRef, () => active);
 
-  function onTabNav(e: KeyboardEvent) {
-    if (e.key !== 'Tab') return;
-    e.preventDefault();
-    inputRef?.dispatchEvent(
-      new KeyboardEvent('keydown', { key: e.shiftKey ? 'ArrowUp' : 'ArrowDown', bubbles: true })
-    );
+  function onKeydown(e: KeyboardEvent) {
+    const mod = isMac ? e.metaKey : e.ctrlKey;
+    if (e.key === 'k' && mod) {
+      e.preventDefault();
+      onActions();
+      return;
+    }
+    tabNav(e, inputRef);
   }
 </script>
 
-<Command.Root shouldFilter={false} loop onkeydown={onTabNav} class="command">
+<Command.Root
+  shouldFilter={false}
+  loop
+  bind:value={highlightedId}
+  onkeydown={onKeydown}
+  class="command"
+>
   {#if isLoading}
     <div class="header">
       <span class="loading">Loading…</span>

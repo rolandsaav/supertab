@@ -19,39 +19,40 @@ async function getTabs(): Promise<Item[]> {
   });
 }
 
-async function handleGetTabs(): Promise<BridgeResponse> {
+/** Duplicate a tab without leaving the copy focused, so the palette stays put. */
+async function duplicateTab(tabId: string): Promise<void> {
+  const [active] = await browser.tabs.query({ currentWindow: true, active: true });
+  await browser.tabs.duplicate(Number(tabId));
+  if (active?.id != null) {
+    await browser.tabs.update(active.id, { active: true });
+  }
+}
+
+async function handle(request: Request): Promise<BridgeResponse> {
   try {
-    return { success: true, items: await getTabs() };
+    switch (request.type) {
+      case 'GET_TABS':
+        return { success: true, items: await getTabs() };
+      case 'ACTIVATE_TAB':
+        await browser.tabs.update(Number(request.tabId), { active: true });
+        return { success: true };
+      case 'CLOSE_TAB':
+        await browser.tabs.remove(Number(request.tabId));
+        return { success: true };
+      case 'DUPLICATE_TAB':
+        await duplicateTab(request.tabId);
+        return { success: true };
+      default:
+        request satisfies never;
+        return { success: false, error: `Unknown request: ${(request as Request).type}` };
+    }
   } catch (err) {
-    console.error('[SuperTab] GET_TABS failed:', err);
+    console.error(`[SuperTab] ${request.type} failed:`, err);
     return { success: false, error: String(err) };
   }
 }
 
-async function handleActivateTab(tabId: string): Promise<BridgeResponse> {
-  try {
-    await browser.tabs.update(Number(tabId), { active: true });
-    return { success: true };
-  } catch (err) {
-    console.error('[SuperTab] ACTIVATE_TAB failed:', err);
-    return { success: false, error: String(err) };
-  }
-}
-
-browser.runtime.onMessage.addListener((message: unknown) => {
-  const request = message as Request;
-
-  if (request?.type === 'GET_TABS') {
-    return handleGetTabs();
-  }
-
-  if (request?.type === 'ACTIVATE_TAB' && request.tabId != null) {
-    return handleActivateTab(request.tabId);
-  }
-
-  // Unknown message type — no response.
-  return undefined;
-});
+browser.runtime.onMessage.addListener((message: unknown) => handle(message as Request));
 
 /** Fire-and-forget a visited-set update, logging any failure. */
 function track(label: string, task: Promise<unknown>): void {

@@ -1,5 +1,9 @@
 import type { Component } from 'svelte';
+import ArrowRight from '@lucide/svelte/icons/arrow-right';
+import X from '@lucide/svelte/icons/x';
 import type { Item, Kind } from '../search/parsers';
+import { activateTab, closeTab } from '../bridge/background-bridge';
+import { isMac } from '../platform';
 
 /**
  * A keystroke stored structurally, not as a display string, so it can be both
@@ -16,31 +20,52 @@ export interface Action {
   id: string;
   label: string;
   icon: Component;
-  kinds: Kind[];
   shortcut?: Shortcut;
   after: 'close' | 'stay';
   /** Performs the verb only — never closes or refetches the palette. */
   run: (item: Item) => Promise<void>;
 }
 
-/** Array order is priority: the first action applicable to a kind is primary. */
-const ACTIONS: Action[] = [];
+interface ActionGroup {
+  primary: Action;
+  secondary: Action[];
+}
+
+const REGISTRY: Partial<Record<Kind, ActionGroup>> = {
+  tab: {
+    primary: {
+      id: 'activate',
+      label: 'Activate',
+      icon: ArrowRight,
+      after: 'close',
+      run: (item) => activateTab(item.id)
+    },
+    secondary: [
+      {
+        id: 'close',
+        label: 'Close Tab',
+        icon: X,
+        shortcut: { mod: true, key: 'w' },
+        after: 'stay',
+        run: (item) => closeTab(item.id)
+      }
+    ]
+  }
+};
+
+export function primaryAction(kind: Kind): Action | undefined {
+  return REGISTRY[kind]?.primary;
+}
 
 export function actionsFor(kind: Kind): Action[] {
-  return ACTIONS.filter((a) => a.kinds.includes(kind));
+  const group = REGISTRY[kind];
+  return group ? [group.primary, ...group.secondary] : [];
 }
-
-export function primaryAction(kind: Kind): Action {
-  return actionsFor(kind)[0];
-}
-
-const IS_MAC =
-  typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 
 export function formatShortcut(s: Shortcut): string {
   const parts: string[] = [];
-  if (s.mod) parts.push(IS_MAC ? '⌘' : 'Ctrl');
-  if (s.shift) parts.push(IS_MAC ? '⇧' : 'Shift');
+  if (s.mod) parts.push(isMac ? '⌘' : 'Ctrl');
+  if (s.shift) parts.push(isMac ? '⇧' : 'Shift');
   parts.push(s.key.toUpperCase());
-  return IS_MAC ? parts.join('') : parts.join('+');
+  return isMac ? parts.join('') : parts.join('+');
 }

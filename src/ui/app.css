@@ -44,6 +44,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 /* bits-ui's Command.Root wrapper. Continues the flex column from .popup so the
@@ -175,4 +176,77 @@
   color: var(--st-text-muted);
   font-size: 0.875em;
   text-align: center;
+}
+
+/* Actions panel — a nested command list anchored bottom-right over the palette,
+   with its filter input below the list. */
+.actions {
+  position: absolute;
+  right: 0.75em;
+  bottom: 0.75em;
+  width: 18em;
+  max-width: calc(100% - 1.5em);
+  display: flex;
+  flex-direction: column;
+  background: var(--st-bg);
+  border: var(--st-border-w) solid var(--st-border);
+  border-radius: 0.75em;
+  box-shadow: 0 0.5em 1.5em rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.actions-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.375em;
+  max-height: 15em;
+  overflow-y: auto;
+}
+
+.action-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625em;
+  width: 100%;
+  padding: 0.5em 0.625em;
+  border: none;
+  border-radius: 0.5em;
+  background: none;
+  color: var(--st-text);
+  font-family: inherit;
+  font-size: 0.875em;
+  text-align: left;
+  cursor: pointer;
+}
+
+.action-item:hover,
+.action-item[data-selected] {
+  background: var(--st-border);
+  outline: none;
+}
+
+.action-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.action-shortcut {
+  color: var(--st-text-muted);
+  font-size: 0.8125em;
+}
+
+.actions-input {
+  width: 100%;
+  padding: 0.625em 0.75em;
+  font-size: 0.9375em;
+  color: var(--st-text);
+  background: transparent;
+  border: none;
+  border-top: var(--st-border-w) solid var(--st-border);
+  outline: none;
+  font-family: inherit;
+}
+
+.actions-input::placeholder {
+  color: var(--st-text-muted);
 }

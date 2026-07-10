@@ -55,12 +55,16 @@ function init(): void {
 
 // Toggle palette visibility on hotkey.
 function handleKeyDown(e: KeyboardEvent): void {
-  // Palette is open: Escape closes it.
+  // Palette is open: Escape closes the actions panel first, else the palette.
   if (store.visible) {
     if (e.key === 'Escape') {
       e.preventDefault();
       e.stopPropagation();
-      store.close();
+      if (store.mode === 'actions') {
+        store.closeActions();
+      } else {
+        store.close();
+      }
     }
     return;
   }
