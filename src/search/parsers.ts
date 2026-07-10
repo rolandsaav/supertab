@@ -1,7 +1,9 @@
 import type { Tabs } from 'webextension-polyfill';
 
+export type Kind = 'tab' | 'bookmark' | 'history';
+
 export interface Item {
-  kind: 'tab' | 'bookmark' | 'history';
+  kind: Kind;
   id: string;
   title: string;
   url: string;

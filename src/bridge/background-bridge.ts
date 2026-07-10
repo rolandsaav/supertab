@@ -23,3 +23,13 @@ export async function getTabs(): Promise<Item[]> {
 export async function activateTab(tabId: string): Promise<void> {
   await send({ type: 'ACTIVATE_TAB', tabId });
 }
+
+/** Close the given tab. */
+export async function closeTab(tabId: string): Promise<void> {
+  await send({ type: 'CLOSE_TAB', tabId });
+}
+
+/** Duplicate the given tab. */
+export async function duplicateTab(tabId: string): Promise<void> {
+  await send({ type: 'DUPLICATE_TAB', tabId });
+}

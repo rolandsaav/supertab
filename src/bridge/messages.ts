@@ -3,7 +3,9 @@ import type { Item } from '../search/parsers';
 /** Requests the content script sends to the background worker. */
 export type Request =
   | { type: 'GET_TABS' }
-  | { type: 'ACTIVATE_TAB'; tabId: string };
+  | { type: 'ACTIVATE_TAB'; tabId: string }
+  | { type: 'CLOSE_TAB'; tabId: string }
+  | { type: 'DUPLICATE_TAB'; tabId: string };
 
 /** Discriminant of every request type. */
 export type MessageType = Request['type'];
