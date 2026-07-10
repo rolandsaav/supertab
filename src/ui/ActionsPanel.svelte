@@ -1,8 +1,8 @@
 <script lang="ts">
   import { Command } from 'bits-ui';
   import type { Item } from '../search/parsers';
-  import { actionsFor, formatShortcut, type Action } from '../actions/registry';
-  import { tabNav, autofocus } from './utils.svelte';
+  import { actionsFor, type Action } from '../actions/registry';
+  import { tabNav, autofocus, formatShortcut } from './utils.svelte';
 
   interface Props {
     item: Item;

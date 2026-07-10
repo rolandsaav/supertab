@@ -1,8 +1,7 @@
 <script lang="ts">
   import { Command } from 'bits-ui';
   import type { Item } from '../search/parsers';
-  import { tabNav, autofocus } from './utils.svelte';
-  import { isMac } from '../platform';
+  import { tabNav, autofocus, isMac } from './utils.svelte';
 
   interface Props {
     results: Item[];
@@ -30,7 +29,7 @@
 
   function onKeydown(e: KeyboardEvent) {
     const mod = isMac ? e.metaKey : e.ctrlKey;
-    if (e.key === 'k' && mod) {
+    if (e.key === 'Enter' && mod) {
       e.preventDefault();
       onActions();
       return;

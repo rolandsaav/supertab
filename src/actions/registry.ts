@@ -3,7 +3,6 @@ import ArrowRight from '@lucide/svelte/icons/arrow-right';
 import X from '@lucide/svelte/icons/x';
 import type { Item, Kind } from '../search/parsers';
 import { activateTab, closeTab } from '../bridge/background-bridge';
-import { isMac } from '../platform';
 
 /**
  * A keystroke stored structurally, not as a display string, so it can be both
@@ -60,12 +59,4 @@ export function primaryAction(kind: Kind): Action | undefined {
 export function actionsFor(kind: Kind): Action[] {
   const group = REGISTRY[kind];
   return group ? [group.primary, ...group.secondary] : [];
-}
-
-export function formatShortcut(s: Shortcut): string {
-  const parts: string[] = [];
-  if (s.mod) parts.push(isMac ? '⌘' : 'Ctrl');
-  if (s.shift) parts.push(isMac ? '⇧' : 'Shift');
-  parts.push(s.key.toUpperCase());
-  return isMac ? parts.join('') : parts.join('+');
 }
