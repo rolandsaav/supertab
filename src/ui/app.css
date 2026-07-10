@@ -112,7 +112,8 @@
 }
 
 .item:hover,
-.item:focus-visible {
+.item:focus-visible,
+.item[data-selected] {
   background: var(--st-border);
   outline: none;
 }

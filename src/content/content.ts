@@ -37,6 +37,13 @@ function init(): void {
     mountApp(shadow);
     console.log('[SuperTab] App mounted');
 
+    const containKey = (e: Event) => {
+      if (store.visible) e.stopPropagation();
+    };
+    for (const type of ['keydown', 'keyup', 'keypress'] as const) {
+      shadow.addEventListener(type, containKey);
+    }
+
     // 4. Global hotkey listener — capture phase so we intercept before
     //    the browser handles keys on focused elements (e.g. Escape on input).
     document.addEventListener('keydown', handleKeyDown, true);
