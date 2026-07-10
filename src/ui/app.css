@@ -1,24 +1,22 @@
-/**
- * Palette styles.
- *
- * Imported as a string (`?inline`) and injected into the Shadow Root by
- * mount.ts. The shadow boundary provides isolation, so plain class selectors
- * are safe — no Svelte scoping needed.
- */
-
-/* ── Design tokens ────────────────────────────────────────────────────────── */
-/* Defined on the shadow host so they cascade into the whole palette. Change a
-   color here and it updates everywhere it is used. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
 :host {
+  font-size: 16px;
+
+  --st-rows: 10;
+  --st-row-height: 3.25em;
+  --st-border-w: 1px;
+
   --st-bg: #404040;
   --st-border: #565656;
   --st-text: #ffffff;
   --st-text-muted: #a0a0a0;
   --st-error: #f38ba8;
 }
-
-/* ── Overlay & popup (App.svelte) ─────────────────────────────────────────── */
 
 .overlay {
   position: fixed;
@@ -27,56 +25,61 @@
   align-items: flex-start;
   justify-content: center;
   padding-top: 12vh;
-  /* No z-index needed: the shadow host (content.ts) already owns the top layer;
-     inside the shadow root the overlay has no siblings to stack against. */
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
     Roboto, Helvetica, Arial, sans-serif;
 }
 
 .popup {
-  width: 600px;
+  width: 37.5em;
   max-width: 92vw;
+  max-height: calc(100vh - 24vh);
   background: var(--st-bg);
-  border: 1px solid var(--st-border);
-  border-radius: 16px;
+  border: var(--st-border-w) solid var(--st-border);
+  border-radius: 1em;
   overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
-.error {
-  padding: 12px 20px;
-  color: var(--st-error);
-  font-size: 13px;
-  border-top: 1px solid var(--st-border);
+.command {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
-/* ── Command palette (CommandPalette.svelte) ──────────────────────────────── */
+.error {
+  padding: 0.75em 1.25em;
+  color: var(--st-error);
+  font-size: 0.875em;
+  border-top: var(--st-border-w) solid var(--st-border);
+  flex-shrink: 0;
+}
 
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 20px 0;
-  gap: 12px;
+  padding: 0.75em 1.25em 0;
+  gap: 0.75em;
+  flex-shrink: 0;
 }
 
 .loading {
-  font-size: 12px;
+  font-size: 0.75em;
   color: var(--st-text-muted);
 }
 
 .input {
   width: 100%;
-  padding: 16px 20px;
-  font-size: 18px;
+  padding: 0.875em 1.125em;
+  font-size: 1.125em;
   color: var(--st-text);
   background: transparent;
   border: none;
-  border-bottom: 1px solid var(--st-border);
+  border-bottom: var(--st-border-w) solid var(--st-border);
   outline: none;
   font-family: inherit;
-  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .input::placeholder {
@@ -87,18 +90,20 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  max-height: 320px;
+  max-height: calc(var(--st-rows) * var(--st-row-height));
+  min-height: 0;
   overflow-y: auto;
 }
 
 .item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0.75em;
   width: 100%;
-  padding: 10px 20px;
+  height: var(--st-row-height);
+  padding: 0 1.25em;
   border: none;
-  border-top: 1px solid var(--st-border);
+  border-top: var(--st-border-w) solid var(--st-border);
   background: none;
   color: inherit;
   font-family: inherit;
@@ -119,10 +124,10 @@
 }
 
 .favicon {
-  width: 16px;
-  height: 16px;
+  width: 1em;
+  height: 1em;
   flex-shrink: 0;
-  border-radius: 2px;
+  border-radius: 0.125em;
 }
 
 .text {
@@ -131,7 +136,7 @@
 
 .title {
   color: var(--st-text);
-  font-size: 14px;
+  font-size: 0.875em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -139,15 +144,15 @@
 
 .url {
   color: var(--st-text-muted);
-  font-size: 12px;
+  font-size: 0.75em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .empty {
-  padding: 20px;
+  padding: 1.25em;
   color: var(--st-text-muted);
-  font-size: 14px;
+  font-size: 0.875em;
   text-align: center;
 }

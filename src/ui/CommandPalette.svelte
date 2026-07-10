@@ -28,7 +28,7 @@
   }
 </script>
 
-<Command.Root shouldFilter={false} loop onkeydown={onTabNav}>
+<Command.Root shouldFilter={false} loop onkeydown={onTabNav} class="command">
   {#if isLoading}
     <div class="header">
       <span class="loading">Loading…</span>
