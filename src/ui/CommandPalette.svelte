@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Command } from 'bits-ui';
   import type { Item } from '../search/parsers';
-  import { tabNav, autofocus, isMac } from './utils.svelte';
+  import { tabNav, autofocus, matchesShortcut, OPEN_ACTIONS_SHORTCUT } from './utils.svelte';
 
   interface Props {
     results: Item[];
@@ -28,8 +28,7 @@
   autofocus(() => inputRef, () => active);
 
   function onKeydown(e: KeyboardEvent) {
-    const mod = isMac ? e.metaKey : e.ctrlKey;
-    if (e.key === 'Enter' && mod) {
+    if (matchesShortcut(e, OPEN_ACTIONS_SHORTCUT)) {
       e.preventDefault();
       onActions();
       return;

@@ -4,13 +4,28 @@ import type { Shortcut } from '../actions/registry';
 export const isMac =
   typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 
+const KEY_LABELS: Record<string, string> = { enter: '↵' };
+
 /** Render a Shortcut as a platform-appropriate display string (⌘W / Ctrl+W). */
 export function formatShortcut(s: Shortcut): string {
   const parts: string[] = [];
   if (s.mod) parts.push(isMac ? '⌘' : 'Ctrl');
   if (s.shift) parts.push(isMac ? '⇧' : 'Shift');
-  parts.push(s.key.toUpperCase());
+  parts.push(KEY_LABELS[s.key.toLowerCase()] ?? s.key.toUpperCase());
   return isMac ? parts.join('') : parts.join('+');
+}
+
+/** The keystroke that opens the actions panel: ⌘↵ on macOS, Ctrl+↵ elsewhere. */
+export const OPEN_ACTIONS_SHORTCUT: Shortcut = { mod: true, key: 'Enter' };
+
+/** Whether a keyboard event matches a canonical Shortcut on the current platform. */
+export function matchesShortcut(e: KeyboardEvent, s: Shortcut): boolean {
+  const mod = isMac ? e.metaKey : e.ctrlKey;
+  return (
+    e.key.toLowerCase() === s.key.toLowerCase() &&
+    !!s.mod === mod &&
+    !!s.shift === e.shiftKey
+  );
 }
 
 /** Translate Tab / Shift+Tab into ↑/↓ on the given input, for Command lists. */

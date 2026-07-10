@@ -55,14 +55,18 @@ class PaletteStore {
     this.tabs = newTabs;
   }
 
+  #reportError(err: unknown, fallback: string): void {
+    this.error = err instanceof Error ? err.message : fallback;
+    console.error('[SuperTab]', err);
+  }
+
   async refetch(): Promise<void> {
     this.isLoading = true;
     this.error = '';
     try {
       this.setTabs(await getTabs());
     } catch (err) {
-      this.error = err instanceof Error ? err.message : 'Failed to load data';
-      console.error('[SuperTab]', err);
+      this.#reportError(err, 'Failed to load data');
     } finally {
       this.isLoading = false;
     }
@@ -70,7 +74,13 @@ class PaletteStore {
 
   /** Run an action, then honor its `after`: close the palette, or refetch and stay. */
   async runAction(action: Action, item: Item): Promise<void> {
-    await action.run(item);
+    try {
+      await action.run(item);
+    } catch (err) {
+      this.#reportError(err, `Could not ${action.label.toLowerCase()}`);
+      this.closeActions();
+      return;
+    }
     if (action.after === 'close') {
       this.close();
     } else {
