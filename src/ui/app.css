@@ -141,7 +141,17 @@
 }
 
 .text {
+  flex: 1;
   min-width: 0;
+}
+
+/* Trailing dot marking a tab not yet visited this session. */
+.badge {
+  flex-shrink: 0;
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 50%;
+  background: var(--st-text-muted);
 }
 
 .title {

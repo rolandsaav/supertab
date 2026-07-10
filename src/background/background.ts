@@ -2,11 +2,21 @@ import browser from 'webextension-polyfill';
 import { parseTab } from '../search/parsers';
 import type { Item } from '../search/parsers';
 import type { Request, BridgeResponse } from '../bridge/messages';
+import { getVisited, markVisited, forget, seed } from './visited';
 
-/** Fetch all tabs in the current window. */
+/**
+ * Fetch all tabs in the current window, minus the active one — the palette
+ * overlays the active tab, so it's the page you're already on.
+ */
 async function getTabs(): Promise<Item[]> {
-  const tabs = await browser.tabs.query({ currentWindow: true });
-  return tabs.map(parseTab);
+  const [tabs, visited] = await Promise.all([
+    browser.tabs.query({ currentWindow: true, active: false }),
+    getVisited()
+  ]);
+  return tabs.map((tab, i) => {
+    const item = parseTab(tab, i);
+    return { ...item, visited: visited.has(item.id) };
+  });
 }
 
 async function handleGetTabs(): Promise<BridgeResponse> {
@@ -42,3 +52,12 @@ browser.runtime.onMessage.addListener((message: unknown) => {
   // Unknown message type — no response.
   return undefined;
 });
+
+// Seed the visited set once per session so pre-existing tabs don't flag as
+// unvisited. Both fire once at session/extension start (not on SW wake).
+browser.runtime.onStartup.addListener(() => void seed());
+browser.runtime.onInstalled.addListener(() => void seed());
+
+// Keep the visited set in step with real activity.
+browser.tabs.onActivated.addListener(({ tabId }) => void markVisited(tabId));
+browser.tabs.onRemoved.addListener((tabId) => void forget(tabId));

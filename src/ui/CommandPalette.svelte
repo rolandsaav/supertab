@@ -58,6 +58,9 @@
           <div class="title">{item.title}</div>
           <div class="url">{item.url}</div>
         </div>
+        {#if item.kind === 'tab' && !item.visited}
+          <span class="badge" title="Not visited yet" aria-label="Not visited yet"></span>
+        {/if}
       </Command.Item>
     {/each}
   </Command.List>
