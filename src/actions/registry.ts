@@ -46,7 +46,7 @@ const REGISTRY: Partial<Record<Kind, ActionGroup>> = {
         id: 'close',
         label: 'Close Tab',
         icon: X,
-        shortcut: { mod: true, key: 'w' },
+        shortcut: { mod: true, key: 'Backspace' },
         after: 'stay',
         run: (item) => closeTab(item.id)
       },

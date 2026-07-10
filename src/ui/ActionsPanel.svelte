@@ -2,7 +2,7 @@
   import { Command } from 'bits-ui';
   import type { Item } from '../search/parsers';
   import { actionsFor, type Action } from '../actions/registry';
-  import { tabNav, autofocus } from './utils.svelte';
+  import { tabNav, autofocus, matchesShortcut } from './utils.svelte';
   import KeyCombo from './KeyCombo.svelte';
 
   interface Props {
@@ -18,9 +18,19 @@
   const actions = $derived(actionsFor(item.kind));
 
   autofocus(() => inputRef);
+
+  function onKeydown(e: KeyboardEvent) {
+    const match = actions.find((a) => a.shortcut && matchesShortcut(e, a.shortcut));
+    if (match) {
+      e.preventDefault();
+      onRun(match);
+      return;
+    }
+    tabNav(e, inputRef);
+  }
 </script>
 
-<Command.Root loop onkeydown={(e) => tabNav(e, inputRef)} class="actions">
+<Command.Root loop onkeydown={onKeydown} class="actions">
   <Command.List class="actions-list">
     <Command.Empty class="empty">No actions</Command.Empty>
     {#each actions as action (action.id)}

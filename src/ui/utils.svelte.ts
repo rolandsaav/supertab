@@ -4,7 +4,7 @@ import type { Shortcut } from '../actions/registry';
 export const isMac =
   typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 
-const KEY_LABELS: Record<string, string> = { enter: '↵' };
+const KEY_LABELS: Record<string, string> = { enter: '↵', backspace: '⌫' };
 
 /** A Shortcut as its individual key glyphs, e.g. ['⌘', '↵'] — for keycap rendering. */
 export function shortcutParts(s: Shortcut): string[] {
