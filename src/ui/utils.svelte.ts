@@ -6,14 +6,17 @@ export const isMac =
 
 const KEY_LABELS: Record<string, string> = { enter: '↵' };
 
-/** Render a Shortcut as a platform-appropriate display string (⌘W / Ctrl+W). */
-export function formatShortcut(s: Shortcut): string {
+/** A Shortcut as its individual key glyphs, e.g. ['⌘', '↵'] — for keycap rendering. */
+export function shortcutParts(s: Shortcut): string[] {
   const parts: string[] = [];
   if (s.mod) parts.push(isMac ? '⌘' : 'Ctrl');
   if (s.shift) parts.push(isMac ? '⇧' : 'Shift');
   parts.push(KEY_LABELS[s.key.toLowerCase()] ?? s.key.toUpperCase());
-  return isMac ? parts.join('') : parts.join('+');
+  return parts;
 }
+
+/** The keystroke that runs an item's primary action. */
+export const PRIMARY_SHORTCUT: Shortcut = { key: 'Enter' };
 
 /** The keystroke that opens the actions panel: ⌘↵ on macOS, Ctrl+↵ elsewhere. */
 export const OPEN_ACTIONS_SHORTCUT: Shortcut = { mod: true, key: 'Enter' };

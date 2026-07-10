@@ -2,7 +2,8 @@
   import { Command } from 'bits-ui';
   import type { Item } from '../search/parsers';
   import { actionsFor, type Action } from '../actions/registry';
-  import { tabNav, autofocus, formatShortcut } from './utils.svelte';
+  import { tabNav, autofocus } from './utils.svelte';
+  import KeyCombo from './KeyCombo.svelte';
 
   interface Props {
     item: Item;
@@ -28,7 +29,9 @@
         <Icon size={16} />
         <span class="action-label">{action.label}</span>
         {#if action.shortcut}
-          <span class="action-shortcut">{formatShortcut(action.shortcut)}</span>
+          <span class="action-shortcut">
+            <KeyCombo shortcut={action.shortcut} />
+          </span>
         {/if}
       </Command.Item>
     {/each}

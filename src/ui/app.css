@@ -44,7 +44,15 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+
+/* Wraps the list and actions panel. Positioning context so the panel floats
+   above the footer rather than over the whole popup. */
+.body {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 /* bits-ui's Command.Root wrapper. Continues the flex column from .popup so the
@@ -178,6 +186,57 @@
   text-align: center;
 }
 
+/* Persistent hint bar: the highlighted item's primary action and the Actions
+   shortcut, clustered at the bottom-right with keycaps, Raycast-style. */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6em;
+  padding: 0.5em 0.75em;
+  border-top: var(--st-border-w) solid var(--st-border);
+  font-size: 0.75em;
+  flex-shrink: 0;
+}
+
+.footer .hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.footer .hint-primary {
+  color: var(--st-text);
+  font-weight: 500;
+}
+
+.footer .hint-actions {
+  color: var(--st-text-muted);
+}
+
+.footer .divider {
+  width: var(--st-border-w);
+  height: 1.2em;
+  background: var(--st-border);
+}
+
+/* A single keycap glyph (⌘, ↵, W …). */
+.key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.6em;
+  height: 1.6em;
+  padding: 0 0.35em;
+  font-family: inherit;
+  font-size: 0.95em;
+  line-height: 1;
+  color: var(--st-text);
+  background: rgba(255, 255, 255, 0.1);
+  border: var(--st-border-w) solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.3em;
+}
+
 /* Actions panel — a nested command list anchored bottom-right over the palette,
    with its filter input below the list. */
 .actions {
@@ -231,7 +290,9 @@
 }
 
 .action-shortcut {
-  color: var(--st-text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
   font-size: 0.8125em;
 }
 
