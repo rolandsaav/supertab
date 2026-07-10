@@ -1,6 +1,6 @@
 <script lang="ts">
   import { store } from './stores.svelte';
-  import { activateTab } from '../bridge/background-bridge';
+  import { primaryAction } from '../actions/registry';
   import CommandPalette from './CommandPalette.svelte';
   import ActionsPanel from './ActionsPanel.svelte';
   import type { Item } from '../search/parsers';
@@ -18,10 +18,10 @@
     }
   });
 
-  /** Activate the selected tab. */
+  /** Run the item's primary action (Enter / click on the list). */
   function onSelect(item: Item) {
-    void activateTab(item.id);
-    store.close();
+    const action = primaryAction(item.kind);
+    if (action) void store.runAction(action, item);
   }
 </script>
 

@@ -1,8 +1,10 @@
 import type { Component } from 'svelte';
 import ArrowRight from '@lucide/svelte/icons/arrow-right';
 import X from '@lucide/svelte/icons/x';
+import Link from '@lucide/svelte/icons/link';
+import Copy from '@lucide/svelte/icons/copy';
 import type { Item, Kind } from '../search/parsers';
-import { activateTab, closeTab } from '../bridge/background-bridge';
+import { activateTab, closeTab, duplicateTab } from '../bridge/background-bridge';
 
 /**
  * A keystroke stored structurally, not as a display string, so it can be both
@@ -47,6 +49,21 @@ const REGISTRY: Partial<Record<Kind, ActionGroup>> = {
         shortcut: { mod: true, key: 'w' },
         after: 'stay',
         run: (item) => closeTab(item.id)
+      },
+      {
+        id: 'copy-url',
+        label: 'Copy URL',
+        icon: Link,
+        shortcut: { mod: true, key: 'c' },
+        after: 'stay',
+        run: (item) => navigator.clipboard.writeText(item.url)
+      },
+      {
+        id: 'duplicate',
+        label: 'Duplicate Tab',
+        icon: Copy,
+        after: 'stay',
+        run: (item) => duplicateTab(item.id)
       }
     ]
   }
