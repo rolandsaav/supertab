@@ -76,6 +76,16 @@ const REGISTRY: Partial<Record<Kind, ActionGroup>> = {
       run: (item) => openUrl(item.url)
     },
     secondary: []
+  },
+  history: {
+    primary: {
+      id: 'open',
+      label: 'Open',
+      icon: ArrowRight,
+      after: 'close',
+      run: (item) => openUrl(item.url)
+    },
+    secondary: []
   }
 };
 
