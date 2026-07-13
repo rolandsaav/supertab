@@ -49,6 +49,9 @@ async function handle(request: Request): Promise<BridgeResponse> {
       case 'DUPLICATE_TAB':
         await duplicateTab(request.tabId);
         return { success: true };
+      case 'OPEN_URL':
+        await browser.tabs.create({ url: request.url });
+        return { success: true };
       default:
         request satisfies never;
         return { success: false, error: `Unknown request: ${(request as Request).type}` };

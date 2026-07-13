@@ -6,7 +6,8 @@ export type Request =
   | { type: 'SEARCH'; query: string; enabled: SourceToggles; reqId: number }
   | { type: 'ACTIVATE_TAB'; tabId: string }
   | { type: 'CLOSE_TAB'; tabId: string }
-  | { type: 'DUPLICATE_TAB'; tabId: string };
+  | { type: 'DUPLICATE_TAB'; tabId: string }
+  | { type: 'OPEN_URL'; url: string };
 
 /** Discriminant of every request type. */
 export type MessageType = Request['type'];

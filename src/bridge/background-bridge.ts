@@ -45,3 +45,8 @@ export async function closeTab(tabId: string): Promise<void> {
 export async function duplicateTab(tabId: string): Promise<void> {
   await send({ type: 'DUPLICATE_TAB', tabId });
 }
+
+/** Open a URL in a new tab. */
+export async function openUrl(url: string): Promise<void> {
+  await send({ type: 'OPEN_URL', url });
+}

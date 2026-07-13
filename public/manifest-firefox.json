@@ -8,7 +8,7 @@
       "id": "supertab@example.com"
     }
   },
-  "permissions": ["tabs", "storage"],
+  "permissions": ["tabs", "storage", "bookmarks"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "scripts": ["background.js"]

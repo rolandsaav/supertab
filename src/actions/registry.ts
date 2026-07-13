@@ -4,7 +4,7 @@ import X from '@lucide/svelte/icons/x';
 import Link from '@lucide/svelte/icons/link';
 import Copy from '@lucide/svelte/icons/copy';
 import type { Item, Kind } from '../search/parsers';
-import { activateTab, closeTab, duplicateTab } from '../bridge/background-bridge';
+import { activateTab, closeTab, duplicateTab, openUrl } from '../bridge/background-bridge';
 
 /**
  * A keystroke stored structurally, not as a display string, so it can be both
@@ -66,6 +66,16 @@ const REGISTRY: Partial<Record<Kind, ActionGroup>> = {
         run: (item) => duplicateTab(item.id)
       }
     ]
+  },
+  bookmark: {
+    primary: {
+      id: 'open',
+      label: 'Open',
+      icon: ArrowRight,
+      after: 'close',
+      run: (item) => openUrl(item.url)
+    },
+    secondary: []
   }
 };
 

@@ -10,7 +10,7 @@ class PaletteStore {
   error = $state('');
 
   /** Which sources the search covers. Tabs only, until toggled on. */
-  enabled = $state<SourceToggles>({ tab: true, bookmark: false, history: false });
+  enabled = $state<SourceToggles>({ tab: true, bookmark: true, history: false }); // TEMP: on by default until the toggle UI exists
 
   /** Which surface has focus: the result list, or the actions panel. */
   mode = $state<'list' | 'actions'>('list');
