@@ -13,12 +13,6 @@ async function send(request: Request): Promise<SuccessResponse> {
   return response;
 }
 
-/** Fetch tabs from the background service worker. */
-export async function getTabs(): Promise<Item[]> {
-  const response = await send({ type: 'GET_TABS' });
-  return response.items ?? [];
-}
-
 /** Signal palette-open so the worker refreshes its item cache. */
 export async function prepareSearch(enabled: SourceToggles): Promise<void> {
   await send({ type: 'PREPARE_SEARCH', enabled });

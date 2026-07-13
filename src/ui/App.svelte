@@ -11,15 +11,10 @@
   const current = $derived(highlighted ?? store.results[0]);
   const primaryLabel = $derived(current ? primaryAction(current.kind)?.label : undefined);
 
-  /**
-   * Refetch tabs on every open so recency ordering (`lastAccessed`) reflects
-   * the tab you just switched away from. The previous list stays visible while
-   * the new one loads, so there is no empty flash.
-   */
+  // Search on open and whenever the query or enabled sources change. The
+  // previous results stay visible while the new ones load, so no empty flash.
   $effect(() => {
-    if (store.visible) {
-      void store.refetch();
-    }
+    if (store.visible) void store.runQuery(store.query, store.enabled);
   });
 
   /** Run the item's primary action (Enter / click on the list). */

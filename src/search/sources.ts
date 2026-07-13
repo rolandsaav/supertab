@@ -1,8 +1,10 @@
+import browser from 'webextension-polyfill';
+import { getVisited } from '../background/visited';
+import { parseTab } from './parsers';
 import type { Item, Kind } from './parsers';
 
 export interface Source {
   kind: Kind;
-  /** Display name (used by the toggle UI). */
   label: string;
   /** Precedence: lower wins, e.g. for a future cross-source tiebreak. */
   order: number;
@@ -10,16 +12,19 @@ export interface Source {
   fetch: () => Promise<Item[]>;
 }
 
-/**
- * Registered sources, keyed by kind. `Partial` because only implemented
- * sources appear — bookmarks/history join in later phases.
- */
+/** All tabs in the current window except the active one (the page behind the palette). */
+async function fetchTabs(): Promise<Item[]> {
+  const [tabs, visited] = await Promise.all([
+    browser.tabs.query({ currentWindow: true, active: false }),
+    getVisited()
+  ]);
+  return tabs.map((tab, i) => {
+    const item = parseTab(tab, i);
+    return { ...item, visited: visited.has(item.id) };
+  });
+}
+
+/** Registered sources, keyed by kind. Bookmarks/history join in later phases. */
 export const SOURCES: Partial<Record<Kind, Source>> = {
-  tab: {
-    kind: 'tab',
-    label: 'Tabs',
-    order: 0,
-    // Phase 1: wire to the real tab fetch (chrome.tabs + visited set).
-    fetch: async () => []
-  }
+  tab: { kind: 'tab', label: 'Tabs', order: 0, fetch: fetchTabs }
 };

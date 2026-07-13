@@ -2,7 +2,6 @@ import type { Item, SourceToggles } from '../search/parsers';
 
 /** Requests the content script sends to the background worker. */
 export type Request =
-  | { type: 'GET_TABS' }
   | { type: 'PREPARE_SEARCH'; enabled: SourceToggles }
   | { type: 'SEARCH'; query: string; enabled: SourceToggles; reqId: number }
   | { type: 'ACTIVATE_TAB'; tabId: string }

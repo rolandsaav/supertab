@@ -19,9 +19,9 @@
     "vite": "^5.0.0"
   },
   "dependencies": {
+    "@leeoniya/ufuzzy": "^1.0.19",
     "@lucide/svelte": "^1.16.0",
     "bits-ui": "^2.18.1",
-    "fuse.js": "^7.0.0",
     "webextension-polyfill": "^0.12.0"
   }
 }

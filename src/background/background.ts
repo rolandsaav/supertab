@@ -1,22 +1,17 @@
 import browser from 'webextension-polyfill';
-import { parseTab } from '../search/parsers';
-import type { Item } from '../search/parsers';
+import { SOURCES } from '../search/sources';
+import { search, type SearchPool } from '../search/search';
 import type { Request, BridgeResponse } from '../bridge/messages';
-import { getVisited, markVisited, forget, seed } from './visited';
+import type { Kind, SourceToggles } from '../search/parsers';
+import { markVisited, forget, seed } from './visited';
 
-/**
- * Fetch all tabs in the current window, minus the active one — the palette
- * overlays the active tab, so it's the page you're already on.
- */
-async function getTabs(): Promise<Item[]> {
-  const [tabs, visited] = await Promise.all([
-    browser.tabs.query({ currentWindow: true, active: false }),
-    getVisited()
-  ]);
-  return tabs.map((tab, i) => {
-    const item = parseTab(tab, i);
-    return { ...item, visited: visited.has(item.id) };
-  });
+/** Fetch the enabled sources' items in parallel. */
+async function fetchPool(enabled: SourceToggles): Promise<SearchPool> {
+  const kinds = (Object.keys(enabled) as Kind[]).filter((k) => enabled[k] && SOURCES[k]);
+  const pairs = await Promise.all(
+    kinds.map(async (k) => [k, await SOURCES[k]!.fetch()] as const)
+  );
+  return Object.fromEntries(pairs);
 }
 
 /** Duplicate a tab without leaving the copy focused, so the palette stays put. */
@@ -31,14 +26,14 @@ async function duplicateTab(tabId: string): Promise<void> {
 async function handle(request: Request): Promise<BridgeResponse> {
   try {
     switch (request.type) {
-      case 'GET_TABS':
-        return { success: true, items: await getTabs() };
       case 'PREPARE_SEARCH':
-        // Phase 1: fetch enabled sources into the cache.
+        // Phase 2: warm the cache. For now SEARCH fetches fresh each call.
         return { success: true };
-      case 'SEARCH':
-        // Phase 1: run the pipeline over the cache.
-        return { success: true, reqId: request.reqId, items: [] };
+      case 'SEARCH': {
+        const pool = await fetchPool(request.enabled);
+        const items = search(pool, request.enabled, request.query);
+        return { success: true, reqId: request.reqId, items };
+      }
       case 'ACTIVATE_TAB':
         await browser.tabs.update(Number(request.tabId), { active: true });
         return { success: true };

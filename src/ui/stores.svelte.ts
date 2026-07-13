@@ -1,20 +1,16 @@
-/**
- * UI State — Svelte 5 runes
- *
- * Exported as a single reactive object. Tab data is cached here.
- */
-
-import { buildIndex, search } from '../search/fuse-index';
-import { getTabs } from '../bridge/background-bridge';
-import type { Item } from '../search/parsers';
+import { runSearch } from '../bridge/background-bridge';
+import type { Item, SourceToggles } from '../search/parsers';
 import type { Action } from '../actions/registry';
 
 class PaletteStore {
   visible = $state(false);
   query = $state('');
-  tabs = $state<Item[]>([]);
+  results = $state<Item[]>([]);
   isLoading = $state(false);
   error = $state('');
+
+  /** Which sources the search covers. Tabs only, until toggled on. */
+  enabled = $state<SourceToggles>({ tab: true, bookmark: false, history: false });
 
   /** Which surface has focus: the result list, or the actions panel. */
   mode = $state<'list' | 'actions'>('list');
@@ -22,13 +18,9 @@ class PaletteStore {
   /** `id` of the currently highlighted result. */
   highlightedId = $state('');
 
-  /** Fuse index, rebuilt automatically whenever `tabs` changes. */
-  #index = $derived(buildIndex(this.tabs));
+  #reqSeq = 0;
 
-  /** Search results: recency-sorted when query is empty, Fuse-ranked otherwise. */
-  results = $derived(search(this.#index, this.tabs, this.query));
-
-  /** Open the palette with fresh ephemeral state. Cached tabs are kept. */
+  /** Open the palette with fresh ephemeral state. */
   open(): void {
     this.query = '';
     this.error = '';
@@ -50,29 +42,25 @@ class PaletteStore {
     this.mode = 'list';
   }
 
-  /** Populate tabs. The Fuse index rebuilds reactively via `#index`. */
-  setTabs(newTabs: Item[]): void {
-    this.tabs = newTabs;
-  }
-
   #reportError(err: unknown, fallback: string): void {
     this.error = err instanceof Error ? err.message : fallback;
     console.error('[SuperTab]', err);
   }
 
-  async refetch(): Promise<void> {
-    this.isLoading = true;
-    this.error = '';
+  /** Search the enabled sources. Out-of-order responses are discarded via reqId. */
+  async runQuery(query: string, enabled: SourceToggles): Promise<void> {
+    const id = ++this.#reqSeq;
     try {
-      this.setTabs(await getTabs());
+      // enabled is a reactive proxy; snapshot it so it survives structured clone over IPC.
+      const clean = $state.snapshot(enabled) as SourceToggles;
+      const { reqId, items } = await runSearch(query, clean, id);
+      if (reqId === this.#reqSeq) this.results = items;
     } catch (err) {
-      this.#reportError(err, 'Failed to load data');
-    } finally {
-      this.isLoading = false;
+      if (id === this.#reqSeq) this.#reportError(err, 'Search failed');
     }
   }
 
-  /** Run an action, then honor its `after`: close the palette, or refetch and stay. */
+  /** Run an action, then honor its `after`: close the palette, or refresh and stay. */
   async runAction(action: Action, item: Item): Promise<void> {
     try {
       await action.run(item);
@@ -84,7 +72,7 @@ class PaletteStore {
     if (action.after === 'close') {
       this.close();
     } else {
-      await this.refetch();
+      await this.runQuery(this.query, this.enabled);
       this.closeActions();
     }
   }
