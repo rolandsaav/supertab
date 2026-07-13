@@ -1,5 +1,5 @@
 import browser from 'webextension-polyfill';
-import type { Item } from '../search/parsers';
+import type { Item, SourceToggles } from '../search/parsers';
 import type { Request, BridgeResponse } from './messages';
 
 type SuccessResponse = Extract<BridgeResponse, { success: true }>;
@@ -17,6 +17,24 @@ async function send(request: Request): Promise<SuccessResponse> {
 export async function getTabs(): Promise<Item[]> {
   const response = await send({ type: 'GET_TABS' });
   return response.items ?? [];
+}
+
+/** Signal palette-open so the worker refreshes its item cache. */
+export async function prepareSearch(enabled: SourceToggles): Promise<void> {
+  await send({ type: 'PREPARE_SEARCH', enabled });
+}
+
+/**
+ * Run a search in the background. `reqId` round-trips so the caller can drop
+ * responses that arrive out of order.
+ */
+export async function runSearch(
+  query: string,
+  enabled: SourceToggles,
+  reqId: number
+): Promise<{ reqId: number; items: Item[] }> {
+  const response = await send({ type: 'SEARCH', query, enabled, reqId });
+  return { reqId: response.reqId ?? reqId, items: response.items ?? [] };
 }
 
 /** Activate (focus) the given tab. */

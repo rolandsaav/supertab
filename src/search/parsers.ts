@@ -2,6 +2,9 @@ import type { Tabs } from 'webextension-polyfill';
 
 export type Kind = 'tab' | 'bookmark' | 'history';
 
+/** Which sources a search should cover. */
+export type SourceToggles = Record<Kind, boolean>;
+
 export interface Item {
   kind: Kind;
   id: string;

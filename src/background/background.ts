@@ -33,6 +33,12 @@ async function handle(request: Request): Promise<BridgeResponse> {
     switch (request.type) {
       case 'GET_TABS':
         return { success: true, items: await getTabs() };
+      case 'PREPARE_SEARCH':
+        // Phase 1: fetch enabled sources into the cache.
+        return { success: true };
+      case 'SEARCH':
+        // Phase 1: run the pipeline over the cache.
+        return { success: true, reqId: request.reqId, items: [] };
       case 'ACTIVATE_TAB':
         await browser.tabs.update(Number(request.tabId), { active: true });
         return { success: true };

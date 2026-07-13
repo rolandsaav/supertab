@@ -1,0 +1,37 @@
+import { order } from './engine';
+import type { Item } from './parsers';
+
+/** Max results surfaced to the UI — single home for the cap. */
+export const RESULT_CAP = 50;
+
+/**
+ * Host + path of a URL, dropping the scheme/query/hash noise every URL carries.
+ * Hostname is kept on purpose — searching by domain ("github") is a primary use
+ * case. Uses the WHATWG URL parser; falls back to the raw string if it won't parse.
+ */
+function cleanUrl(raw: string): string {
+  try {
+    const { hostname, pathname } = new URL(raw);
+    return hostname + pathname;
+  } catch {
+    return raw;
+  }
+}
+
+/** The text a query is matched against — single home for searchable fields. */
+const searchableText = (item: Item): string => `${item.title} ${cleanUrl(item.url)}`;
+
+/**
+ * Order items for display and cap the count.
+ * Empty query → most recently accessed first. Otherwise → engine relevance.
+ */
+export function rank(items: Item[], query: string): Item[] {
+  const trimmed = query.trim();
+
+  if (!trimmed) {
+    return [...items].sort((a, b) => b.lastAccessed - a.lastAccessed).slice(0, RESULT_CAP);
+  }
+
+  const idxs = order(items.map(searchableText), trimmed);
+  return idxs.slice(0, RESULT_CAP).map((i) => items[i]);
+}
