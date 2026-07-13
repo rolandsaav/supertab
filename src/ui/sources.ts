@@ -2,7 +2,7 @@ import type { Component } from 'svelte';
 import AppWindow from '@lucide/svelte/icons/app-window';
 import Bookmark from '@lucide/svelte/icons/bookmark';
 import History from '@lucide/svelte/icons/history';
-import type { Kind } from '../search/parsers';
+import type { Kind, SourceToggles } from '../search/parsers';
 
 interface SourceMeta {
   label: string;
@@ -27,4 +27,14 @@ export function parseSourceCommand(input: string): Kind | null {
     (kind) => SOURCE_META[kind].command === input
   );
   return match ?? null;
+}
+
+const listFormat = new Intl.ListFormat('en', { style: 'long', type: 'conjunction' });
+
+/** Input placeholder naming the enabled sources, e.g. "Search tabs and history…". */
+export function searchPlaceholder(enabled: SourceToggles): string {
+  const names = SOURCE_ORDER.filter((kind) => enabled[kind]).map((kind) =>
+    SOURCE_META[kind].label.toLowerCase()
+  );
+  return `Search ${listFormat.format(names)}…`;
 }

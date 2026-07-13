@@ -3,6 +3,7 @@
   import type { Item, Kind, SourceToggles } from '../search/parsers';
   import { tabNav, autofocus, matchesShortcut, OPEN_ACTIONS_SHORTCUT } from './utils.svelte';
   import SourceIcons from './SourceIcons.svelte';
+  import { searchPlaceholder } from './sources';
 
   interface Props {
     results: Item[];
@@ -31,6 +32,8 @@
   }: Props = $props();
 
   let inputRef = $state<HTMLInputElement | null>(null);
+
+  const placeholder = $derived(searchPlaceholder(enabled));
 
   autofocus(() => inputRef, () => active);
 
@@ -62,7 +65,7 @@
       bind:ref={inputRef}
       value={query}
       oninput={(e) => onInput(e.currentTarget.value)}
-      placeholder="Search…"
+      {placeholder}
       class="input"
     />
     <SourceIcons {enabled} onToggle={onToggleSource} />
