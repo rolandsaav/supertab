@@ -36,7 +36,8 @@
       <div class="body">
         <CommandPalette
           results={store.results}
-          bind:query={store.query}
+          query={store.query}
+          onInput={(value) => store.handleInput(value)}
           bind:highlightedId={store.highlightedId}
           active={store.mode === 'list'}
           isLoading={store.isLoading}

@@ -14,18 +14,20 @@
     onSelect: (item: Item) => void;
     onActions: () => void;
     onToggleSource: (kind: Kind) => void;
+    onInput: (value: string) => void;
   }
 
   let {
     results,
-    query = $bindable(),
+    query,
     highlightedId = $bindable(),
     active,
     isLoading,
     enabled,
     onSelect,
     onActions,
-    onToggleSource
+    onToggleSource,
+    onInput
   }: Props = $props();
 
   let inputRef = $state<HTMLInputElement | null>(null);
@@ -58,7 +60,8 @@
   <div class="input-row">
     <Command.Input
       bind:ref={inputRef}
-      bind:value={query}
+      value={query}
+      oninput={(e) => onInput(e.currentTarget.value)}
       placeholder="Search tabs…"
       class="input"
     />

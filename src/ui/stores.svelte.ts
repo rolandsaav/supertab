@@ -1,6 +1,7 @@
 import { prepareSearch, runSearch } from '../bridge/background-bridge';
 import type { Item, Kind, SourceToggles } from '../search/parsers';
 import type { Action } from '../actions/registry';
+import { parseSourceCommand } from './sources';
 
 class PaletteStore {
   visible = $state(false);
@@ -58,6 +59,24 @@ class PaletteStore {
     const onCount = Object.values(this.enabled).filter(Boolean).length;
     if (this.enabled[kind] && onCount === 1) return;
     this.enabled = { ...this.enabled, [kind]: !this.enabled[kind] };
+  }
+
+  /** Enable a source — @-commands are enable-only, never disable. */
+  enableSource(kind: Kind): void {
+    if (this.enabled[kind]) return;
+    this.enabled = { ...this.enabled, [kind]: true };
+  }
+
+  /** Route a raw input change: a lone @-command enables its source and clears
+   * the input; anything else becomes the search query. */
+  handleInput(value: string): void {
+    const kind = parseSourceCommand(value);
+    if (kind) {
+      this.enableSource(kind);
+      this.query = '';
+      return;
+    }
+    this.query = value;
   }
 
   #reportError(err: unknown, fallback: string): void {
