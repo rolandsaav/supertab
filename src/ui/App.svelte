@@ -40,8 +40,10 @@
           bind:highlightedId={store.highlightedId}
           active={store.mode === 'list'}
           isLoading={store.isLoading}
+          enabled={store.enabled}
           {onSelect}
           onActions={() => store.openActions()}
+          onToggleSource={(kind) => store.toggleSource(kind)}
         />
         {#if store.mode === 'actions' && highlighted}
           <ActionsPanel

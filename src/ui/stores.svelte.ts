@@ -1,5 +1,5 @@
 import { prepareSearch, runSearch } from '../bridge/background-bridge';
-import type { Item, SourceToggles } from '../search/parsers';
+import type { Item, Kind, SourceToggles } from '../search/parsers';
 import type { Action } from '../actions/registry';
 
 class PaletteStore {
@@ -10,7 +10,7 @@ class PaletteStore {
   error = $state('');
 
   /** Which sources the search covers. Tabs only, until toggled on. */
-  enabled = $state<SourceToggles>({ tab: true, bookmark: true, history: false }); // TEMP: on by default until the toggle UI exists
+  enabled = $state<SourceToggles>({ tab: true, bookmark: false, history: false });
 
   /** Which surface has focus: the result list, or the actions panel. */
   mode = $state<'list' | 'actions'>('list');
@@ -51,6 +51,13 @@ class PaletteStore {
 
   closeActions(): void {
     this.mode = 'list';
+  }
+
+  /** Toggle a source on/off, but never let the last enabled source turn off. */
+  toggleSource(kind: Kind): void {
+    const onCount = Object.values(this.enabled).filter(Boolean).length;
+    if (this.enabled[kind] && onCount === 1) return;
+    this.enabled = { ...this.enabled, [kind]: !this.enabled[kind] };
   }
 
   #reportError(err: unknown, fallback: string): void {

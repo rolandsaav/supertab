@@ -102,6 +102,56 @@
   color: var(--st-text-muted);
 }
 
+/* Search input paired with the source-toggle icons on its right, sharing one
+   bottom border so the two read as a single row. */
+.input-row {
+  display: flex;
+  align-items: center;
+  border-bottom: var(--st-border-w) solid var(--st-border);
+  flex-shrink: 0;
+}
+
+.input-row .input {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+  border-bottom: none;
+}
+
+/* Source-toggle icons: muted by default, white when the source is enabled. */
+.sources {
+  display: flex;
+  align-items: center;
+  gap: 0.375em;
+  padding-right: 1.125em;
+}
+
+.source {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25em;
+  border: none;
+  background: none;
+  color: var(--st-text-muted);
+  cursor: pointer;
+  border-radius: 0.3em;
+}
+
+.source.enabled {
+  color: var(--st-text);
+}
+
+.source:focus-visible {
+  outline: none;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.source svg {
+  width: 1.125em;
+  height: 1.125em;
+}
+
 /* Shows --st-rows rows when there's room, otherwise shrinks to fit the popup
    and scrolls internally. */
 .list {

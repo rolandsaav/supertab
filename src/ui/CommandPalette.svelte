@@ -1,7 +1,8 @@
 <script lang="ts">
   import { Command } from 'bits-ui';
-  import type { Item } from '../search/parsers';
+  import type { Item, Kind, SourceToggles } from '../search/parsers';
   import { tabNav, autofocus, matchesShortcut, OPEN_ACTIONS_SHORTCUT } from './utils.svelte';
+  import SourceIcons from './SourceIcons.svelte';
 
   interface Props {
     results: Item[];
@@ -9,8 +10,10 @@
     highlightedId: string;
     active: boolean;
     isLoading: boolean;
+    enabled: SourceToggles;
     onSelect: (item: Item) => void;
     onActions: () => void;
+    onToggleSource: (kind: Kind) => void;
   }
 
   let {
@@ -19,8 +22,10 @@
     highlightedId = $bindable(),
     active,
     isLoading,
+    enabled,
     onSelect,
-    onActions
+    onActions,
+    onToggleSource
   }: Props = $props();
 
   let inputRef = $state<HTMLInputElement | null>(null);
@@ -50,12 +55,15 @@
     </div>
   {/if}
 
-  <Command.Input
-    bind:ref={inputRef}
-    bind:value={query}
-    placeholder="Search tabs…"
-    class="input"
-  />
+  <div class="input-row">
+    <Command.Input
+      bind:ref={inputRef}
+      bind:value={query}
+      placeholder="Search tabs…"
+      class="input"
+    />
+    <SourceIcons {enabled} onToggle={onToggleSource} />
+  </div>
 
   <Command.List class="list">
     <Command.Empty class="empty">No results found</Command.Empty>
