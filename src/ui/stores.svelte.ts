@@ -1,4 +1,4 @@
-import { runSearch } from '../bridge/background-bridge';
+import { prepareSearch, runSearch } from '../bridge/background-bridge';
 import type { Item, SourceToggles } from '../search/parsers';
 import type { Action } from '../actions/registry';
 
@@ -27,6 +27,17 @@ class PaletteStore {
     this.mode = 'list';
     this.highlightedId = '';
     this.visible = true;
+    // Refresh the cache before the effect fires the first search (messages are ordered, so PREPARE lands before SEARCH).
+    void this.prepare();
+  }
+
+  /** Invalidate the background cache so the next search refetches. */
+  async prepare(): Promise<void> {
+    try {
+      await prepareSearch($state.snapshot(this.enabled));
+    } catch (err) {
+      this.#reportError(err, 'Failed to refresh');
+    }
   }
 
   /** Close the palette. */
@@ -72,6 +83,7 @@ class PaletteStore {
     if (action.after === 'close') {
       this.close();
     } else {
+      await this.prepare();
       await this.runQuery(this.query, this.enabled);
       this.closeActions();
     }

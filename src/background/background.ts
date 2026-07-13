@@ -14,6 +14,10 @@ async function fetchPool(enabled: SourceToggles): Promise<SearchPool> {
   return Object.fromEntries(pairs);
 }
 
+// Fetched items held between keystrokes. Null means "refetch on next search" —
+// set on palette-open (freshness) and after an idle service-worker wake.
+let cache: SearchPool | null = null;
+
 /** Duplicate a tab without leaving the copy focused, so the palette stays put. */
 async function duplicateTab(tabId: string): Promise<void> {
   const [active] = await browser.tabs.query({ currentWindow: true, active: true });
@@ -27,11 +31,13 @@ async function handle(request: Request): Promise<BridgeResponse> {
   try {
     switch (request.type) {
       case 'PREPARE_SEARCH':
-        // Phase 2: warm the cache. For now SEARCH fetches fresh each call.
+        // Invalidate so the next search refetches. Delivered before SEARCH, so
+        // the open/refresh path always sees fresh data.
+        cache = null;
         return { success: true };
       case 'SEARCH': {
-        const pool = await fetchPool(request.enabled);
-        const items = search(pool, request.enabled, request.query);
+        cache ??= await fetchPool(request.enabled);
+        const items = search(cache, request.enabled, request.query);
         return { success: true, reqId: request.reqId, items };
       }
       case 'ACTIVATE_TAB':
