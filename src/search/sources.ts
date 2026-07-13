@@ -8,11 +8,10 @@ const HISTORY_WINDOW_DAYS = 90;
 const HISTORY_MAX_RESULTS = 1000;
 const HISTORY_RECENT_N = 100;
 const HISTORY_TOP_N = 200;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 export interface Source {
   kind: Kind;
-  /** Precedence: lower wins, e.g. for a future cross-source tiebreak. */
-  order: number;
   /** Fetch this source's items. Invoked in the background only. */
   fetch: () => Promise<Item[]>;
 }
@@ -45,7 +44,7 @@ async function fetchBookmarks(): Promise<Item[]> {
 
 /** Recent plus most-visited history within a bounded window, merged by URL. */
 async function fetchHistory(): Promise<Item[]> {
-  const startTime = Date.now() - HISTORY_WINDOW_DAYS * 864e5;
+  const startTime = Date.now() - HISTORY_WINDOW_DAYS * MS_PER_DAY;
   const pool = await browser.history.search({
     text: '',
     startTime,
@@ -66,7 +65,7 @@ async function fetchHistory(): Promise<Item[]> {
 
 /** Registered sources, keyed by kind. */
 export const SOURCES: Partial<Record<Kind, Source>> = {
-  tab: { kind: 'tab', order: 0, fetch: fetchTabs },
-  bookmark: { kind: 'bookmark', order: 1, fetch: fetchBookmarks },
-  history: { kind: 'history', order: 2, fetch: fetchHistory }
+  tab: { kind: 'tab', fetch: fetchTabs },
+  bookmark: { kind: 'bookmark', fetch: fetchBookmarks },
+  history: { kind: 'history', fetch: fetchHistory }
 };

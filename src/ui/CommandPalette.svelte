@@ -62,7 +62,7 @@
       bind:ref={inputRef}
       value={query}
       oninput={(e) => onInput(e.currentTarget.value)}
-      placeholder="Search tabs…"
+      placeholder="Search…"
       class="input"
     />
     <SourceIcons {enabled} onToggle={onToggleSource} />
