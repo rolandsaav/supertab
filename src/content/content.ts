@@ -3,8 +3,8 @@ import { store } from '../ui/stores.svelte';
 
 const HOST_ID = 'supertab-host';
 
-/** Key that opens the palette. */
-const OPEN_KEY = 'F2';
+/** Key that toggles the palette open/closed. */
+const OPEN_KEY = 'F1';
 
 console.log('[SuperTab] Content script loaded');
 
@@ -55,26 +55,27 @@ function init(): void {
 
 // Toggle palette visibility on hotkey.
 function handleKeyDown(e: KeyboardEvent): void {
-  // Palette is open: Escape closes the actions panel first, else the palette.
-  if (store.visible) {
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      e.stopPropagation();
-      if (store.mode === 'actions') {
-        store.closeActions();
-      } else {
-        store.close();
-      }
+  // <OPEN_KEY> toggles the palette: open when closed, close when open.
+  if (e.key === OPEN_KEY) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (store.visible) {
+      store.close();
+    } else {
+      store.open();
     }
     return;
   }
 
-  // Palette is closed: <OPEN_KEY> opens it.
-  const isOpenHotkey = e.key === OPEN_KEY;
-  if (isOpenHotkey) {
+  // While open, Escape steps back: the actions panel first, else the palette.
+  if (store.visible && e.key === 'Escape') {
     e.preventDefault();
     e.stopPropagation();
-    store.open();
+    if (store.mode === 'actions') {
+      store.closeActions();
+    } else {
+      store.close();
+    }
   }
 }
 
