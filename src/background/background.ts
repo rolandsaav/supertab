@@ -5,18 +5,22 @@ import type { Request, BridgeResponse } from '../bridge/messages';
 import type { Kind, SourceToggles } from '../search/parsers';
 import { markVisited, forget, seed } from './visited';
 
-/** Fetch the enabled sources' items in parallel. */
-async function fetchPool(enabled: SourceToggles): Promise<SearchPool> {
-  const kinds = (Object.keys(enabled) as Kind[]).filter((k) => enabled[k] && SOURCES[k]);
-  const pairs = await Promise.all(
-    kinds.map(async (k) => [k, await SOURCES[k]!.fetch()] as const)
-  );
-  return Object.fromEntries(pairs);
-}
+// Fetched items held between keystrokes, filled lazily per source. Emptied on
+// palette-open (freshness) and after an idle service-worker wake, so the next
+// search refetches; enabling a source mid-session fetches just that source.
+let cache: SearchPool = {};
 
-// Fetched items held between keystrokes. Null means "refetch on next search" —
-// set on palette-open (freshness) and after an idle service-worker wake.
-let cache: SearchPool | null = null;
+/** Fetch any enabled source missing from the cache, in parallel. */
+async function fillPool(enabled: SourceToggles): Promise<void> {
+  const missing = (Object.keys(enabled) as Kind[]).filter(
+    (k) => enabled[k] && SOURCES[k] && cache[k] === undefined
+  );
+  await Promise.all(
+    missing.map(async (k) => {
+      cache[k] = await SOURCES[k]!.fetch();
+    })
+  );
+}
 
 /** Duplicate a tab without leaving the copy focused, so the palette stays put. */
 async function duplicateTab(tabId: string): Promise<void> {
@@ -33,10 +37,10 @@ async function handle(request: Request): Promise<BridgeResponse> {
       case 'PREPARE_SEARCH':
         // Invalidate so the next search refetches. Delivered before SEARCH, so
         // the open/refresh path always sees fresh data.
-        cache = null;
+        cache = {};
         return { success: true };
       case 'SEARCH': {
-        cache ??= await fetchPool(request.enabled);
+        await fillPool(request.enabled);
         const items = search(cache, request.enabled, request.query);
         return { success: true, reqId: request.reqId, items };
       }
@@ -48,6 +52,9 @@ async function handle(request: Request): Promise<BridgeResponse> {
         return { success: true };
       case 'DUPLICATE_TAB':
         await duplicateTab(request.tabId);
+        return { success: true };
+      case 'OPEN_URL':
+        await browser.tabs.create({ url: request.url });
         return { success: true };
       default:
         request satisfies never;

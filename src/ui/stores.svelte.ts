@@ -1,6 +1,7 @@
 import { prepareSearch, runSearch } from '../bridge/background-bridge';
-import type { Item, SourceToggles } from '../search/parsers';
+import type { Item, Kind, SourceToggles } from '../search/parsers';
 import type { Action } from '../actions/registry';
+import { parseSourceCommand } from './sources';
 
 class PaletteStore {
   visible = $state(false);
@@ -18,6 +19,10 @@ class PaletteStore {
   /** `id` of the currently highlighted result. */
   highlightedId = $state('');
 
+  /** `id` of the item the actions panel targets — set when actions open, so it
+   * survives the list's own highlight changes. */
+  actionId = $state('');
+
   #reqSeq = 0;
 
   /** Open the palette with fresh ephemeral state. */
@@ -26,6 +31,7 @@ class PaletteStore {
     this.error = '';
     this.mode = 'list';
     this.highlightedId = '';
+    this.actionId = '';
     this.visible = true;
     // Refresh the cache before the effect fires the first search (messages are ordered, so PREPARE lands before SEARCH).
     void this.prepare();
@@ -45,12 +51,38 @@ class PaletteStore {
     this.visible = false;
   }
 
-  openActions(): void {
+  openActions(id: string = this.highlightedId): void {
+    this.actionId = id;
     this.mode = 'actions';
   }
 
   closeActions(): void {
     this.mode = 'list';
+  }
+
+  /** Toggle a source on/off, but never let the last enabled source turn off. */
+  toggleSource(kind: Kind): void {
+    const onCount = Object.values(this.enabled).filter(Boolean).length;
+    if (this.enabled[kind] && onCount === 1) return;
+    this.enabled = { ...this.enabled, [kind]: !this.enabled[kind] };
+  }
+
+  /** Enable a source — @-commands are enable-only, never disable. */
+  enableSource(kind: Kind): void {
+    if (this.enabled[kind]) return;
+    this.enabled = { ...this.enabled, [kind]: true };
+  }
+
+  /** Route a raw input change: a lone @-command enables its source and clears
+   * the input; anything else becomes the search query. */
+  handleInput(value: string): void {
+    const kind = parseSourceCommand(value);
+    if (kind) {
+      this.enableSource(kind);
+      this.query = '';
+      return;
+    }
+    this.query = value;
   }
 
   #reportError(err: unknown, fallback: string): void {

@@ -1,4 +1,4 @@
-import type { Tabs } from 'webextension-polyfill';
+import type { Tabs, Bookmarks, History } from 'webextension-polyfill';
 
 export type Kind = 'tab' | 'bookmark' | 'history';
 
@@ -24,6 +24,30 @@ export function parseTab(tab: Tabs.Tab, index: number): Item {
     url: tab.url || '',
     favIconUrl: tab.favIconUrl || '',
     lastAccessed: tab.lastAccessed ?? 0,
+    visited: false
+  };
+}
+
+export function parseBookmark(node: Bookmarks.BookmarkTreeNode): Item {
+  return {
+    kind: 'bookmark',
+    id: node.id,
+    title: node.title || node.url || 'Untitled',
+    url: node.url || '',
+    favIconUrl: '',
+    lastAccessed: node.dateAdded ?? 0,
+    visited: false
+  };
+}
+
+export function parseHistory(item: History.HistoryItem): Item {
+  return {
+    kind: 'history',
+    id: item.id,
+    title: item.title || item.url || 'Untitled',
+    url: item.url || '',
+    favIconUrl: '',
+    lastAccessed: item.lastVisitTime ?? 0,
     visited: false
   };
 }

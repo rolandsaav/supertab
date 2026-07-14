@@ -32,6 +32,8 @@ export function rank(items: Item[], query: string): Item[] {
     return [...items].sort((a, b) => b.lastAccessed - a.lastAccessed).slice(0, RESULT_CAP);
   }
 
-  const idxs = order(items.map(searchableText), trimmed);
+  // Normalize the query the same way as the haystack, so pasting a full URL
+  // (scheme/query/hash and all) still matches the cleaned url text.
+  const idxs = order(items.map(searchableText), cleanUrl(trimmed) || trimmed);
   return idxs.slice(0, RESULT_CAP).map((i) => items[i]);
 }

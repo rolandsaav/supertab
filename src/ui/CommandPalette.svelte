@@ -1,7 +1,9 @@
 <script lang="ts">
   import { Command } from 'bits-ui';
-  import type { Item } from '../search/parsers';
+  import type { Item, Kind, SourceToggles } from '../search/parsers';
   import { tabNav, autofocus, matchesShortcut, OPEN_ACTIONS_SHORTCUT } from './utils.svelte';
+  import SourceIcons from './SourceIcons.svelte';
+  import { searchPlaceholder } from './sources';
 
   interface Props {
     results: Item[];
@@ -9,21 +11,29 @@
     highlightedId: string;
     active: boolean;
     isLoading: boolean;
+    enabled: SourceToggles;
     onSelect: (item: Item) => void;
-    onActions: () => void;
+    onActions: (id?: string) => void;
+    onToggleSource: (kind: Kind) => void;
+    onInput: (value: string) => void;
   }
 
   let {
     results,
-    query = $bindable(),
+    query,
     highlightedId = $bindable(),
     active,
     isLoading,
+    enabled,
     onSelect,
-    onActions
+    onActions,
+    onToggleSource,
+    onInput
   }: Props = $props();
 
   let inputRef = $state<HTMLInputElement | null>(null);
+
+  const placeholder = $derived(searchPlaceholder(enabled));
 
   autofocus(() => inputRef, () => active);
 
@@ -50,17 +60,29 @@
     </div>
   {/if}
 
-  <Command.Input
-    bind:ref={inputRef}
-    bind:value={query}
-    placeholder="Search tabs…"
-    class="input"
-  />
+  <div class="input-row">
+    <Command.Input
+      bind:ref={inputRef}
+      value={query}
+      oninput={(e) => onInput(e.currentTarget.value)}
+      {placeholder}
+      class="input"
+    />
+    <SourceIcons {enabled} onToggle={onToggleSource} />
+  </div>
 
   <Command.List class="list">
     <Command.Empty class="empty">No results found</Command.Empty>
     {#each results as item (item.id)}
-      <Command.Item value={item.id} onSelect={() => onSelect(item)} class="item">
+      <Command.Item
+        value={item.id}
+        onSelect={() => onSelect(item)}
+        oncontextmenu={(e) => {
+          e.preventDefault();
+          onActions(item.id);
+        }}
+        class="item"
+      >
         {#if item.favIconUrl}
           <img
             class="favicon"
