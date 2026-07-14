@@ -32,6 +32,16 @@ interface ActionGroup {
   secondary: Action[];
 }
 
+/** Copy the item's URL — identical for every source, so defined once. */
+const copyUrl: Action = {
+  id: 'copy-url',
+  label: 'Copy URL',
+  icon: Link,
+  shortcut: { mod: true, key: 'c' },
+  after: 'stay',
+  run: (item) => navigator.clipboard.writeText(item.url)
+};
+
 const REGISTRY: Partial<Record<Kind, ActionGroup>> = {
   tab: {
     primary: {
@@ -50,14 +60,7 @@ const REGISTRY: Partial<Record<Kind, ActionGroup>> = {
         after: 'stay',
         run: (item) => closeTab(item.id)
       },
-      {
-        id: 'copy-url',
-        label: 'Copy URL',
-        icon: Link,
-        shortcut: { mod: true, key: 'c' },
-        after: 'stay',
-        run: (item) => navigator.clipboard.writeText(item.url)
-      },
+      copyUrl,
       {
         id: 'duplicate',
         label: 'Duplicate Tab',
@@ -70,22 +73,22 @@ const REGISTRY: Partial<Record<Kind, ActionGroup>> = {
   bookmark: {
     primary: {
       id: 'open',
-      label: 'Open',
+      label: 'Open in New Tab',
       icon: ArrowRight,
       after: 'close',
       run: (item) => openUrl(item.url)
     },
-    secondary: []
+    secondary: [copyUrl]
   },
   history: {
     primary: {
       id: 'open',
-      label: 'Open',
+      label: 'Open in New Tab',
       icon: ArrowRight,
       after: 'close',
       run: (item) => openUrl(item.url)
     },
-    secondary: []
+    secondary: [copyUrl]
   }
 };
 
