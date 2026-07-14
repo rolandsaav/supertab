@@ -13,7 +13,7 @@
     isLoading: boolean;
     enabled: SourceToggles;
     onSelect: (item: Item) => void;
-    onActions: () => void;
+    onActions: (id?: string) => void;
     onToggleSource: (kind: Kind) => void;
     onInput: (value: string) => void;
   }
@@ -74,7 +74,15 @@
   <Command.List class="list">
     <Command.Empty class="empty">No results found</Command.Empty>
     {#each results as item (item.id)}
-      <Command.Item value={item.id} onSelect={() => onSelect(item)} class="item">
+      <Command.Item
+        value={item.id}
+        onSelect={() => onSelect(item)}
+        oncontextmenu={(e) => {
+          e.preventDefault();
+          onActions(item.id);
+        }}
+        class="item"
+      >
         {#if item.favIconUrl}
           <img
             class="favicon"

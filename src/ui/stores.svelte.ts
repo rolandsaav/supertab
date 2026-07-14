@@ -19,6 +19,10 @@ class PaletteStore {
   /** `id` of the currently highlighted result. */
   highlightedId = $state('');
 
+  /** `id` of the item the actions panel targets — set when actions open, so it
+   * survives the list's own highlight changes. */
+  actionId = $state('');
+
   #reqSeq = 0;
 
   /** Open the palette with fresh ephemeral state. */
@@ -27,6 +31,7 @@ class PaletteStore {
     this.error = '';
     this.mode = 'list';
     this.highlightedId = '';
+    this.actionId = '';
     this.visible = true;
     // Refresh the cache before the effect fires the first search (messages are ordered, so PREPARE lands before SEARCH).
     void this.prepare();
@@ -46,7 +51,8 @@ class PaletteStore {
     this.visible = false;
   }
 
-  openActions(): void {
+  openActions(id: string = this.highlightedId): void {
+    this.actionId = id;
     this.mode = 'actions';
   }
 

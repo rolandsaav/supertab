@@ -7,6 +7,7 @@
   import type { Item } from '../search/parsers';
 
   const highlighted = $derived(store.results.find((i) => i.id === store.highlightedId));
+  const actionItem = $derived(store.results.find((i) => i.id === store.actionId));
 
   const current = $derived(highlighted ?? store.results[0]);
   const primaryLabel = $derived(current ? primaryAction(current.kind)?.label : undefined);
@@ -43,14 +44,16 @@
           isLoading={store.isLoading}
           enabled={store.enabled}
           {onSelect}
-          onActions={() => store.openActions()}
+          onActions={(id) => store.openActions(id)}
           onToggleSource={(kind) => store.toggleSource(kind)}
         />
-        {#if store.mode === 'actions' && highlighted}
-          <ActionsPanel
-            item={highlighted}
-            onRun={(action) => highlighted && store.runAction(action, highlighted)}
-          />
+        {#if store.mode === 'actions' && actionItem}
+          {#key store.actionId}
+            <ActionsPanel
+              item={actionItem}
+              onRun={(action) => actionItem && store.runAction(action, actionItem)}
+            />
+          {/key}
         {/if}
       </div>
       {#if store.error}
