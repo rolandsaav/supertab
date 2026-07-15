@@ -5,61 +5,49 @@ import Copy from '@lucide/svelte/icons/copy';
 import SearchIcon from '@lucide/svelte/icons/search';
 import type { Command } from '../../commands/command';
 import type { Item } from '../../search/parsers';
+import { action, openView } from '../../commands/factories';
 import { searchApi } from './api';
 import { MODULE } from './module';
 import Search from './Search.svelte';
 
 /** Root-list entry: opens the search view. */
-export const searchCommand: Command = {
+export const searchCommand = openView({
   id: MODULE,
   title: 'Search Tabs, Bookmarks & History',
   icon: SearchIcon,
   keywords: ['tabs', 'bookmarks', 'history', 'find'],
-  run: { kind: 'view', view: Search }
-};
+  view: Search
+});
 
 // Content-side only — no background needed, so no api call.
-const copyUrl: Command<Item> = {
+const copyUrl = action<Item>({
   id: 'copy-url',
   title: 'Copy URL',
   icon: Link,
   shortcut: { mod: true, key: 'c' },
-  run: { kind: 'perform', perform: (entry) => navigator.clipboard.writeText(entry.url), after: 'stay' }
-};
+  do: (entry) => navigator.clipboard.writeText(entry.url),
+  after: 'stay'
+});
 
 /** Commands for a result — [0] is the primary (Enter) action, the rest fill the panel. */
 export function commandsForItem(item: Item): Command<Item>[] {
   if (item.kind === 'tab') {
     return [
-      {
-        id: 'activate',
-        title: 'Activate',
-        icon: ArrowRight,
-        run: { kind: 'perform', perform: (tab) => searchApi.activateTab(tab.id), after: 'close' }
-      },
-      {
+      action<Item>({ id: 'activate', title: 'Activate', icon: ArrowRight, do: (tab) => searchApi.activateTab(tab.id) }),
+      action<Item>({
         id: 'close',
         title: 'Close Tab',
         icon: X,
         shortcut: { mod: true, key: 'Backspace' },
-        run: { kind: 'perform', perform: (tab) => searchApi.closeTab(tab.id), after: 'stay' }
-      },
+        do: (tab) => searchApi.closeTab(tab.id),
+        after: 'stay'
+      }),
       copyUrl,
-      {
-        id: 'duplicate',
-        title: 'Duplicate Tab',
-        icon: Copy,
-        run: { kind: 'perform', perform: (tab) => searchApi.duplicateTab(tab.id), after: 'stay' }
-      }
+      action<Item>({ id: 'duplicate', title: 'Duplicate Tab', icon: Copy, do: (tab) => searchApi.duplicateTab(tab.id), after: 'stay' })
     ];
   }
   return [
-    {
-      id: 'open',
-      title: 'Open in New Tab',
-      icon: ArrowRight,
-      run: { kind: 'perform', perform: (entry) => searchApi.openUrl(entry.url), after: 'close' }
-    },
+    action<Item>({ id: 'open', title: 'Open in New Tab', icon: ArrowRight, do: (entry) => searchApi.openUrl(entry.url) }),
     copyUrl
   ];
 }

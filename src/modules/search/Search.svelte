@@ -1,7 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import ListView from '../../components/ListView.svelte';
+  import List from '../../components/list/List.svelte';
+  import ListItem from '../../components/list/ListItem.svelte';
   import SourceIcons from './SourceIcons.svelte';
+  import ItemRow from './ItemRow.svelte';
   import { searchApi } from './api';
   import { commandsForItem } from './commands';
   import { searchPlaceholder, parseSourceCommand } from './sources';
@@ -66,33 +68,13 @@
   }
 </script>
 
-<ListView
-  {items}
-  bind:query
-  getId={(entry) => entry.id}
-  {placeholder}
-  commands={commandsForItem}
-  onQuery={onInput}
-  onRefresh={refresh}
->
+<List bind:query {placeholder} onSearchChange={onInput} onRefresh={refresh}>
   {#snippet header()}
     <SourceIcons {enabled} onToggle={toggle} />
   {/snippet}
-  {#snippet item(entry)}
-    {#if entry.favIconUrl}
-      <img
-        class="favicon"
-        src={entry.favIconUrl}
-        alt=""
-        onerror={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-      />
-    {/if}
-    <div class="text">
-      <div class="title">{entry.title}</div>
-      <div class="url">{entry.url}</div>
-    </div>
-    {#if entry.kind === 'tab' && !entry.visited}
-      <span class="badge" title="Not visited yet" aria-label="Not visited yet"></span>
-    {/if}
-  {/snippet}
-</ListView>
+  {#each items as item (item.id)}
+    <ListItem id={item.id} subject={item} actions={commandsForItem(item)}>
+      <ItemRow {item} />
+    </ListItem>
+  {/each}
+</List>
