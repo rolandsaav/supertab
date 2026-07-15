@@ -6,7 +6,7 @@
   import { nav } from '../shell/nav.svelte';
   import { footer } from '../shell/footer.svelte';
   import { status, toMessage } from '../shell/status.svelte';
-  import { order } from '../search/engine';
+  import { order } from '../lib/fuzzy';
   import { autofocus, tabNav, matchesShortcut, OPEN_ACTIONS_SHORTCUT } from './utils.svelte';
   import ActionsPanel from './ActionsPanel.svelte';
 
