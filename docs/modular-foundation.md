@@ -1,6 +1,6 @@
 # Modular Foundation
 
-**Status:** Design — in progress
+**Status:** Implemented — foundation + search module on `modular-foundation`
 **Branch:** `modular-foundation`
 
 ## Goal
@@ -44,20 +44,30 @@ src/
     Shell.svelte          # (was App.svelte) overlay + popup + footer; renders the active view
     nav.svelte.ts         # navigation store: visible, stack, open()/push()/pop()/close()
     footer.svelte.ts      # the view-driven footer slot — a rune singleton (decision 3)
+    status.svelte.ts      # transient error surfaced under the palette — a rune singleton
     view.ts               # the View (Strategy) type
     RootList.svelte       # the root command list — itself a module/view
+    CommandRow.svelte     # the root list's row markup (rows are components)
   commands/
     command.ts            # the Command<T> contract (root entries AND per-item actions)
+    factories.ts          # action()/openView() — build Commands without the run boilerplate
     registry.ts           # the root command list: [Search, …later modules] — the one wiring point
   modules/
     search/               # the migrated search module
       commands.ts         # every Command this module defines (launch command + per-item actions) ─┐
-      Search.svelte       # the View (Strategy)                                                     │ content context
+      Search.svelte       # the View (Strategy)                                                     │
+      ItemRow.svelte      # the module's result-row markup (rows are components)                    │ content context
       api.ts              # the module's privileged interface + its content-side Proxy             ─┘
       background.ts       # implements api.ts + owns bg state (the search cache) ── background context
   components/
-    ListView.svelte       # generic "searchable list + per-item actions" primitive (optional)
-    Footer, Key, …        # shared chrome
+    list/                 # composable list primitives a view assembles itself (optional)
+      List.svelte         #   input + results + keyboard/footer/actions-panel machinery
+      ListItem.svelte     #   one row: registers its actions, forwards select/context-menu
+      context.ts          #   the List↔ListItem seam — an action registry keyed by id
+      run.ts              #   runCommand: view→push, perform→close|stay, error→status
+    Footer, Key, ActionsPanel, … # shared chrome
+  lib/
+    fuzzy.ts              # generic uFuzzy ranking (order()) — no domain deps
   bridge/
     rpc.ts                # shared envelope types + content-side defineProxy (Proxy)
     rpc-background.ts     # background dispatcher + registerModule (Facade/Mediator)
@@ -106,8 +116,8 @@ only real axis of difference is the subject, which the generic captures cleanly.
 
 **2. `View` — the Strategy the shell renders.** A View is *just* a Svelte component —
 the whole module contract. No required props; it reaches navigation and the footer
-through shell context, so any component conforms with zero boilerplate (a non-list
-module owes nothing to ListView).
+through the `nav`/`footer` rune singletons (decision 7), so any component conforms with
+zero boilerplate (a non-list module owes nothing to the list primitives).
 
 ```ts
 // src/shell/view.ts
@@ -156,13 +166,13 @@ the registry. That's what lets views `import { nav }` directly with no cycle.
    so lifecycle is free — including search's "refresh the background cache on entry",
    which fires in the module's `onMount` instead of today's `store.open()`. The old
    singleton `PaletteStore` shrinks to the shell nav store.
-3. **Per-item actions fold into ListView (D3).** The shell stops tracking a search-specific
-   `mode`/`actionId`. Consequence: the **footer is view-driven** — the shell exposes a
-   footer slot (a `footer` rune singleton) that the active view populates; the shell owns no action
-   knowledge. ListView fills it from the highlighted item's actions.
-4. **ListView is optional, not the contract.** The module contract is "a View (a Svelte
-   component)". ListView is a reusable primitive *below* that layer for the common
-   list-shaped case. Non-list modules (forms, dashboards, …) render whatever they want.
+3. **Per-item actions fold into the list primitives (D3).** The shell stops tracking a
+   search-specific `mode`/`actionId`. Consequence: the **footer is view-driven** — the shell
+   exposes a footer slot (a `footer` rune singleton) that the active view populates; the shell
+   owns no action knowledge. `List` fills it from the highlighted row's actions.
+4. **The list primitives are optional, not the contract.** The module contract is "a View (a
+   Svelte component)". `List`/`ListItem` are reusable primitives *below* that layer for the
+   common list-shaped case. Non-list modules (forms, dashboards, …) render whatever they want.
 5. **Root is a special `Frame`, not a registry `Command`** — otherwise root would list
    itself. The registry is *what root renders*, not root itself.
 6. **A "module" is a convention, not a type** — a folder that exports its `Command` and
@@ -181,9 +191,10 @@ the registry. That's what lets views `import { nav }` directly with no cycle.
 9. **Module folder is four obvious files** — `commands.ts` (all Command definitions),
    `<Name>.svelte` (the View), `api.ts` (privileged interface + Proxy), `background.ts`
    (implements `api.ts`). `api ⇄ background` is the client/implementation pair.
-10. **`src/ui` → `src/components`.**
+10. **`src/ui` → `src/components`;** and the generic uFuzzy ranking moved out of the search
+    domain to `src/lib/fuzzy.ts` (`order()`), so the shared `List` doesn't depend on `search/`.
 11. **Back navigation chrome.** When the palette is in a pushed view (`nav.canPop`),
-    ListView shows a back button left of the input. Clicking it and pressing Escape both
+    `List` shows a back button left of the input. Clicking it and pressing Escape both
     call `nav.pop()` — one frame back, landing on root today. Mirrors Raycast's back arrow.
 12. **Hand-rolled RPC, no dependency.** Evaluated `@webext-core/messaging`, `comlink` +
     `comlink-extension`, `webext-bridge`, and `trpc-chrome`. The whole layer is ~30 lines,
@@ -264,51 +275,48 @@ Tab verbs (`activate`, `close`, `duplicate`) are search's ops for now. When a se
 consumer appears (Unload Tabs, Tab Groups), extract a shared `tabs` ops namespace
 (rule of three). We do **not** build shared infrastructure speculatively.
 
-## ListView
+## List primitives
 
-The generic "searchable list + per-item actions" primitive that backs most modules
-(root list, search, and future list-shaped modules). It is **optional** — non-list
-modules render their own view and never touch it.
+`components/list/` is a small set of composable primitives a view assembles itself
+(Raycast-style), not one god-component configured by props. They back the list-shaped
+views (root list, search, future list-shaped modules) and are **optional** — a non-list
+module renders its own view and never touches them.
 
-```ts
-// components/ListView.svelte  <script lang="ts" generics="T">
-interface Props {
-  items: T[];
-  getId: (item: T) => string;
-  placeholder: string;
-  commands: (item: T) => Command<T>[];   // per-item; [0] = primary (Enter), rest = action panel
-  item: Snippet<[T]>;                    // row renderer — the module owns row markup
-  header?: Snippet;                      // optional chrome, e.g. search's source-toggle icons
-  isLoading?: boolean;
-  onQuery?: (query: string) => void;     // present → controlled; absent → internal fuzzy filter
-  onRefresh?: () => void;                // called after a `perform` command with after: 'stay'
-}
-```
+- **`List.svelte`** — the chrome: `Command.Root` + input + results, keyboard nav, the
+  **back button** left of the input (shown when `nav.canPop`; click = Escape = `nav.pop()`),
+  the **actions panel** overlay, and populating the **footer** from the highlighted row's
+  primary command. It renders the module's rows as its `children`, so the **module owns the
+  `{#each}`**. Props: `placeholder`, `isLoading?`, `query?` (bindable — a module can rewrite
+  the input, e.g. clear on an @-command), `header?` (chrome, e.g. search's source toggles),
+  `onSearchChange?`, `onRefresh?`, `children`.
+- **`ListItem.svelte`** `<T>` — one row. Props: `id`, `actions: Command<T>[]` (`[0]` =
+  primary/Enter, the rest fill the panel), `subject?: T` (what an action's `perform`
+  receives — omitted for void/root commands), and `children` (the row markup, a module-owned
+  component like `CommandRow`/`ItemRow`). It registers `{subject, actions}` by `id` and
+  forwards select / right-click.
+- **`context.ts`** — the seam. Because the module owns the `{#each}`, `List` learns a row's
+  actions only by registration: each `ListItem` registers into a `SvelteMap` keyed by `id`;
+  `List` reads the highlighted `id`'s entry to drive the footer, Enter, the ⌘↵ panel, and
+  per-item shortcuts. The only coupling is the `id` string and the `ItemEntry` shape.
+- **`run.ts`** — `runCommand(command, subject, onRefresh?)`, the one place that interprets a
+  command: `view` → `nav.push`; `perform` + `after: 'close'` → perform then `nav.close()`;
+  `perform` + `after: 'stay'` → perform then `onRefresh?.()`; a thrown error → `status.error`.
 
-ListView owns the generic machinery: the `Command.Root` + input + list, keyboard nav,
-a **back button** left of the input (shown when `nav.canPop`; click = Escape = `nav.pop()`),
-the **actions panel** overlay (right-click / shortcut), running commands, and populating
-the **footer** from the highlighted item's primary command. Modules supply only data +
-row markup.
+### Who filters — the module
 
-### Decision A — who filters
+`List` owns only the input and reports the query (bindable `query` + `onSearchChange`); the
+**module derives its own visible rows**. Search is controlled — each keystroke re-fetches
+from the background (debounced, with `reqId` to drop stale responses) and renders the result
+as-is. The root list filters its in-memory commands itself with the generic `order()` helper
+(`lib/fuzzy`) in a `$derived` — about four lines. This keeps `List` free of item data (no
+`items`/`getId`/`getText` props) and gives each view one honest data pipeline.
 
-One signal flips the mode:
+### Escape
 
-- **`onQuery` provided → controlled.** ListView renders `items` as-is and reports each
-  keystroke; the module re-fetches and hands back new `items` (search queries the
-  background, debounced, with `reqId` to drop stale responses).
-- **`onQuery` absent → internal filter.** ListView filters `items` itself with our uFuzzy
-  ranking helper. The root list and any small in-memory list get fuzzy search for free.
-
-### Decision B — who runs a command
-
-ListView handles the generic path so no module reimplements it:
-
-- `view` command → `nav.push`.
-- `perform` + `after: 'close'` → perform, then `nav.close()`.
-- `perform` + `after: 'stay'` → perform, then `onRefresh?.()` (refreshing is
-  module-specific: search re-runs prepare+query; root re-filters, so it omits `onRefresh`).
+Back-to-root on Escape is nav's default (`nav.escape()` → `nav.pop()`, fired by the content
+script) and is not owned by any view. `List` registers the panel-eats-Escape interceptor
+**only while the actions panel is open** (a guarded effect), so the override is scoped to the
+panel's real lifetime instead of an always-mounted effect.
 
 ## Anatomy of a module
 
@@ -316,9 +324,10 @@ The full search module — four files, the shape every future module copies. A m
 author writes these four files and adds one line to `registry.ts` (`searchCommand`);
 they never touch `bridge/`, `shell/`, or the registry internals.
 
-The four files map to four questions: how it appears (`commands.ts`), what it looks like
-(`<Name>.svelte`), what it can do in the background (`api.ts` — the contract), and how it
-does it (`background.ts`).
+The four files map to four questions: how it appears (`commands.ts`, built with the
+`action()`/`openView()` factories), what it looks like (`<Name>.svelte`, which extracts its
+row markup into small components like `ItemRow`), what it can do in the background (`api.ts`
+— the contract), and how it does it (`background.ts`).
 
 **`modules/search/api.ts`** — the contract + the client (content side):
 
@@ -380,7 +389,8 @@ const handlers: SearchApi = {
 registerModule('search', handlers);
 ```
 
-**`modules/search/commands.ts`** — the launch command + per-item actions (all `Command`s):
+**`modules/search/commands.ts`** — the launch command + per-item actions, built with the
+`action()`/`openView()` factories (which hide the `run` discriminant):
 
 ```ts
 import ArrowRight from '@lucide/svelte/icons/arrow-right';
@@ -390,68 +400,66 @@ import Copy from '@lucide/svelte/icons/copy';
 import SearchIcon from '@lucide/svelte/icons/search';
 import type { Command } from '../../commands/command';
 import type { Item } from '../../search/parsers';
+import { action, openView } from '../../commands/factories';
 import { searchApi } from './api';
+import { MODULE } from './module';
 import Search from './Search.svelte';
 
 /** Root-list entry: opens the search view. */
-export const searchCommand: Command = {
-  id: 'search',
+export const searchCommand = openView({
+  id: MODULE,
   title: 'Search Tabs, Bookmarks & History',
   icon: SearchIcon,
   keywords: ['tabs', 'bookmarks', 'history', 'find'],
-  run: { kind: 'view', view: Search }
-};
+  view: Search
+});
 
 // Content-side only — no background needed, so no api call.
-const copyUrl: Command<Item> = {
+const copyUrl = action<Item>({
   id: 'copy-url', title: 'Copy URL', icon: Link, shortcut: { mod: true, key: 'c' },
-  run: { kind: 'perform', perform: (item) => navigator.clipboard.writeText(item.url), after: 'stay' }
-};
-
-const openInNewTab: Command<Item> = {
-  id: 'open', title: 'Open in New Tab', icon: ArrowRight,
-  run: { kind: 'perform', perform: (item) => searchApi.openUrl(item.url), after: 'close' }
-};
+  do: (item) => navigator.clipboard.writeText(item.url), after: 'stay'
+});
 
 /** Commands for a result — [0] is the primary (Enter) action, the rest fill the panel. */
 export function commandsForItem(item: Item): Command<Item>[] {
-  switch (item.kind) {
-    case 'tab':
-      return [
-        { id: 'activate', title: 'Activate', icon: ArrowRight,
-          run: { kind: 'perform', perform: (i) => searchApi.activateTab(i.id), after: 'close' } },
-        { id: 'close', title: 'Close Tab', icon: X, shortcut: { mod: true, key: 'Backspace' },
-          run: { kind: 'perform', perform: (i) => searchApi.closeTab(i.id), after: 'stay' } },
-        copyUrl,
-        { id: 'duplicate', title: 'Duplicate Tab', icon: Copy,
-          run: { kind: 'perform', perform: (i) => searchApi.duplicateTab(i.id), after: 'stay' } }
-      ];
-    case 'bookmark':
-    case 'history':
-      return [openInNewTab, copyUrl];
+  if (item.kind === 'tab') {
+    return [
+      action<Item>({ id: 'activate', title: 'Activate', icon: ArrowRight, do: (i) => searchApi.activateTab(i.id) }),
+      action<Item>({ id: 'close', title: 'Close Tab', icon: X, shortcut: { mod: true, key: 'Backspace' },
+        do: (i) => searchApi.closeTab(i.id), after: 'stay' }),
+      copyUrl,
+      action<Item>({ id: 'duplicate', title: 'Duplicate Tab', icon: Copy, do: (i) => searchApi.duplicateTab(i.id), after: 'stay' })
+    ];
   }
+  return [
+    action<Item>({ id: 'open', title: 'Open in New Tab', icon: ArrowRight, do: (i) => searchApi.openUrl(i.url) }),
+    copyUrl
+  ];
 }
 ```
 
-**`modules/search/Search.svelte`** — the view, wiring data to ListView:
+**`modules/search/Search.svelte`** — the view, composing the list primitives (state and
+handlers trimmed; the module owns the `{#each}` and its own data pipeline):
 
 ```svelte
 <script lang="ts">
   import { onMount } from 'svelte';
-  import ListView from '../../components/ListView.svelte';
+  import List from '../../components/list/List.svelte';
+  import ListItem from '../../components/list/ListItem.svelte';
+  import SourceIcons from './SourceIcons.svelte';
+  import ItemRow from './ItemRow.svelte';
   import { searchApi } from './api';
   import { commandsForItem } from './commands';
   import type { Item, SourceToggles } from '../../search/parsers';
 
   let items = $state<Item[]>([]);
   let enabled = $state<SourceToggles>({ tab: true, bookmark: false, history: false });
-  let lastQuery = $state('');
+  let query = $state('');
   let reqSeq = 0;
 
   onMount(() => { void searchApi.prepare(); });   // refresh the bg cache on entry (was store.open())
 
   async function runQuery(q: string) {
-    lastQuery = q;
     const id = ++reqSeq;
     const clean = $state.snapshot(enabled);        // snapshot before it crosses IPC, or clone throws
     const { reqId, items: next } = await searchApi.query(q, clean, id);
@@ -459,18 +467,14 @@ export function commandsForItem(item: Item): Command<Item>[] {
   }
 </script>
 
-<ListView
-  {items}
-  getId={(i) => i.id}
-  placeholder="Search tabs, bookmarks & history…"
-  commands={commandsForItem}
-  onQuery={runQuery}
-  onRefresh={() => runQuery(lastQuery)}
->
-  {#snippet item(i)}
-    <!-- favicon + title + url row markup -->
-  {/snippet}
-</ListView>
+<List bind:query placeholder="Search tabs, bookmarks & history…" onSearchChange={runQuery}>
+  {#snippet header()}<SourceIcons {enabled} … />{/snippet}
+  {#each items as item (item.id)}
+    <ListItem id={item.id} subject={item} actions={commandsForItem(item)}>
+      <ItemRow {item} />
+    </ListItem>
+  {/each}
+</List>
 ```
 
 Notice the **actions-vs-operations boundary is visible in one file**: in `commands.ts`,
@@ -517,6 +521,6 @@ do not build a lazy seam** until bundle size actually bites.
 
 **Borrowing:**
 - **Back navigation chrome** — Raycast's back arrow left of the search bar (decision 11).
-- *(Later, optional)* a small library of `Command` factories for common verbs (copy URL,
-  open in new tab), echoing Raycast's `<Action.*>`.
+- **`Command` factories** — `action()`/`openView()` in `commands/factories.ts`, echoing
+  Raycast's `<Action.*>`: the readable call-site without markup registration.
 ```
