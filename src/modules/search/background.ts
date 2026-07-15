@@ -22,10 +22,13 @@ async function fillPool(enabled: SourceToggles): Promise<void> {
   );
 }
 
+/** Tab ids cross the RPC boundary as strings; the tabs.* API wants numbers. */
+const toTabId = (id: string): number => Number(id);
+
 /** Duplicate a tab without leaving the copy focused, so the palette stays put. */
 async function duplicateTab(id: string): Promise<void> {
   const [active] = await browser.tabs.query({ currentWindow: true, active: true });
-  await browser.tabs.duplicate(Number(id));
+  await browser.tabs.duplicate(toTabId(id));
   if (active?.id != null) {
     await browser.tabs.update(active.id, { active: true });
   }
@@ -40,10 +43,10 @@ const handlers: SearchApi = {
     return { reqId, items: search(cache, enabled, query) };
   },
   async activateTab(id) {
-    await browser.tabs.update(Number(id), { active: true });
+    await browser.tabs.update(toTabId(id), { active: true });
   },
   async closeTab(id) {
-    await browser.tabs.remove(Number(id));
+    await browser.tabs.remove(toTabId(id));
   },
   duplicateTab,
   async openUrl(url) {

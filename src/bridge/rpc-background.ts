@@ -24,7 +24,7 @@ export function registerModule(name: string, handlers: object): void {
   modules[name] = handlers as ModuleHandlers;
 }
 
-/** True when a message is one of our RPC envelopes rather than, say, a legacy Request. */
+/** True when a message is one of our RPC envelopes. */
 function isRpcRequest(message: unknown): message is RpcRequest {
   const candidate = message as Partial<RpcRequest>;
   return typeof candidate?.module === 'string' && typeof candidate?.op === 'string';
@@ -50,8 +50,8 @@ async function runOperation(request: RpcRequest): Promise<RpcResponse> {
   }
 }
 
-// Non-RPC messages return undefined so the legacy Request listener still handles
-// them while both paths coexist during migration.
+// Non-RPC messages are ignored: returning undefined leaves them for any other
+// onMessage listener to claim.
 browser.runtime.onMessage.addListener((message: unknown) => {
   if (!isRpcRequest(message)) {
     return undefined;

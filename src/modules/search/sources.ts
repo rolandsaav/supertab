@@ -18,8 +18,9 @@ export const SOURCE_META: Record<Kind, SourceMeta> = {
   history: { label: 'History', icon: History, command: '@h' }
 };
 
-/** Left-to-right display order of the source toggle icons. */
-export const SOURCE_ORDER: Kind[] = ['tab', 'bookmark', 'history'];
+/** Left-to-right display order of the source toggle icons — the declaration order
+ * of SOURCE_META, so adding a source needs only a SOURCE_META entry. */
+export const SOURCE_ORDER = Object.keys(SOURCE_META) as Kind[];
 
 /** The source a whole-input @-command enables, or null when the input is not one. */
 export function parseSourceCommand(input: string): Kind | null {
