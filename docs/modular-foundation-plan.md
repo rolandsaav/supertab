@@ -98,7 +98,7 @@ rewrite ranking or fetching.
 - [ ] Full `commandsForItem`: bookmark/history `open` + `copyUrl`; tab `duplicate` + `copyUrl`; `copyUrl` stays content-side (`navigator.clipboard`) — verifies the actions-vs-operations boundary.
 - [ ] Source toggles + `@t/@b/@h` commands + placeholder via the `header` snippet; reuse `SOURCE_META`/`parseSourceCommand`/`searchPlaceholder` and `SourceIcons.svelte` (moved into `modules/search/`).
 - [ ] `prepare()` on `onMount`; visited badge; error surfacing equivalent to today.
-- [ ] Relocate search-specific UI (`sources.ts`, `SourceIcons.svelte`) into `modules/search/`; shared chrome (`Footer`, `Key`, `KeyCombo`, `utils`) into `components/`.
+- Search-specific UI (`sources.ts`, `SourceIcons.svelte`) is reused **in place** from `ui/` for now; the physical relocation is deferred to Phase 4's rename sweep, so the still-present legacy files that import them don't break and nothing is duplicated.
 
 **✓ Checkpoint:**
 - [ ] Search module matches the pre-refactor palette feature-for-feature (toggles, @-commands, badge, all per-item actions, errors).
@@ -113,7 +113,7 @@ rewrite ranking or fetching.
 - [ ] `background/background.ts` collapses to: import each module's `background.ts` (side-effect registration) + the global visited-set lifecycle listeners.
   - This removes the search cache / `fillPool` / `duplicateTab` now duplicated in `modules/search/background.ts`, and the RPC-envelope guard (`'module' in message`) on the legacy listener — once the legacy handler is gone, no message needs routing around.
   - The `isRpcRequest` guard in `rpc-background.ts` stays (it's the dispatcher's own filter), but no longer coexists with a second copy.
-- [ ] Complete `src/ui` → `src/components` rename; fix all imports; `mount.ts` targets `Shell`.
+- [ ] Relocate `src/ui`: search-specific UI (`sources.ts`, `SourceIcons.svelte`) → `modules/search/`; shared chrome (`Footer`, `Key`, `KeyCombo`, `utils`, `app.css`) → `components/`. Fix all imports; `mount.ts` targets `Shell`.
 - [ ] Build both targets (`npm run build`, `npm run build:firefox`); `npm run check` clean.
 
 **✓ Checkpoint:**

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { nav } from './nav.svelte';
   import { footer } from './footer.svelte';
+  import { status } from './status.svelte';
   import RootList from './RootList.svelte';
   import Footer from '../ui/Footer.svelte';
 
@@ -22,6 +23,9 @@
           <Current />
         {/key}
       </div>
+      {#if status.error}
+        <div class="error">{status.error}</div>
+      {/if}
       <Footer primaryLabel={footer.primaryLabel} hasActions={footer.hasActions} />
     </div>
   </div>

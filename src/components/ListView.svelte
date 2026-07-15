@@ -5,6 +5,7 @@
   import type { Command as PaletteCommand } from '../commands/command';
   import { nav } from '../shell/nav.svelte';
   import { footer } from '../shell/footer.svelte';
+  import { status, toMessage } from '../shell/status.svelte';
   import { order } from '../search/engine';
   import { autofocus, tabNav, matchesShortcut, OPEN_ACTIONS_SHORTCUT } from '../ui/utils.svelte';
   import ActionsPanel from './ActionsPanel.svelte';
@@ -19,6 +20,8 @@
     item: Snippet<[T]>;
     header?: Snippet;
     isLoading?: boolean;
+    /** The input value — bindable so a module can rewrite it (e.g. clear on an @-command). */
+    query?: string;
     onQuery?: (query: string) => void;
     onRefresh?: () => void;
   }
@@ -32,11 +35,10 @@
     item,
     header,
     isLoading = false,
+    query = $bindable(''),
     onQuery,
     onRefresh
   }: Props = $props();
-
-  let query = $state('');
   let highlightedId = $state('');
   let inputRef = $state<HTMLInputElement | null>(null);
   let actionsOpen = $state(false);
@@ -84,11 +86,17 @@
   }
 
   async function run(command: PaletteCommand<T>, subject: T): Promise<void> {
+    status.error = '';
     if (command.run.kind === 'view') {
       nav.push(command);
       return;
     }
-    await command.run.perform(subject);
+    try {
+      await command.run.perform(subject);
+    } catch (e) {
+      status.error = toMessage(e, 'Action failed');
+      return;
+    }
     if (command.run.after === 'stay') {
       onRefresh?.();
     } else {
