@@ -1,6 +1,10 @@
 <script lang="ts">
   import { nav } from './nav.svelte';
+  import { footer } from './footer.svelte';
+  import RootList from './RootList.svelte';
+  import Footer from '../ui/Footer.svelte';
 
+  nav.setRoot({ view: RootList, title: 'SuperTab' });
   const Current = $derived(nav.current?.view);
 </script>
 
@@ -18,6 +22,7 @@
           <Current />
         {/key}
       </div>
+      <Footer primaryLabel={footer.primaryLabel} hasActions={footer.hasActions} />
     </div>
   </div>
 {/if}

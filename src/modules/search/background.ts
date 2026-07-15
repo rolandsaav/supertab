@@ -4,6 +4,7 @@ import { SOURCES } from '../../search/sources';
 import { search, type SearchPool } from '../../search/search';
 import type { Kind, SourceToggles } from '../../search/parsers';
 import type { SearchApi } from './api';
+import { MODULE } from './module';
 
 // Fetched items held between keystrokes, filled lazily per source. Emptied on
 // palette-open (freshness) so the next search refetches.
@@ -50,4 +51,4 @@ const handlers: SearchApi = {
   }
 };
 
-registerModule('search', handlers);
+registerModule(MODULE, handlers);

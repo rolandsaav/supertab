@@ -109,7 +109,10 @@ rewrite ranking or fetching.
 *Goal: remove the parallel old path and the scaffolding it required.*
 
 - [ ] Delete `bridge/messages.ts`, `bridge/background-bridge.ts`, the `handle` switch, `actions/registry.ts`, `ui/App.svelte`, `ui/CommandPalette.svelte`, `ui/ActionsPanel.svelte`, and `PaletteStore`.
+  - Deleting `actions/registry.ts` orphans the `Shortcut` type it defines — **repoint** `ui/utils.svelte.ts` and `ui/KeyCombo.svelte` to import `Shortcut` from `commands/command.ts` (which is now its authoritative home; the two definitions are duplicated during migration).
 - [ ] `background/background.ts` collapses to: import each module's `background.ts` (side-effect registration) + the global visited-set lifecycle listeners.
+  - This removes the search cache / `fillPool` / `duplicateTab` now duplicated in `modules/search/background.ts`, and the RPC-envelope guard (`'module' in message`) on the legacy listener — once the legacy handler is gone, no message needs routing around.
+  - The `isRpcRequest` guard in `rpc-background.ts` stays (it's the dispatcher's own filter), but no longer coexists with a second copy.
 - [ ] Complete `src/ui` → `src/components` rename; fix all imports; `mount.ts` targets `Shell`.
 - [ ] Build both targets (`npm run build`, `npm run build:firefox`); `npm run check` clean.
 

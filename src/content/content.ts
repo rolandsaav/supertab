@@ -1,5 +1,6 @@
 import { mountApp } from './mount';
 import { nav } from '../shell/nav.svelte';
+import { searchCommand } from '../modules/search/commands';
 
 const HOST_ID = 'supertab-host';
 
@@ -62,16 +63,16 @@ function handleKeyDown(e: KeyboardEvent): void {
     if (nav.visible) {
       nav.close();
     } else {
-      nav.open('search');
+      nav.open(searchCommand);
     }
     return;
   }
 
-  // While open, Escape steps back one view; popping past root closes.
+  // While open, Escape steps back: an open popover first, then one view; past root closes.
   if (nav.visible && e.key === 'Escape') {
     e.preventDefault();
     e.stopPropagation();
-    nav.pop();
+    nav.escape();
   }
 }
 

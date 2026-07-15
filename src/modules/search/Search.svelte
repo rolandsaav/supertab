@@ -11,9 +11,7 @@
   let reqSeq = 0;
 
   // Refresh the background cache on entry, then show the initial (empty-query) results.
-  onMount(() => {
-    void searchApi.prepare().then(() => runQuery(''));
-  });
+  onMount(refresh);
 
   async function runQuery(query: string): Promise<void> {
     lastQuery = query;
@@ -21,6 +19,12 @@
     const clean = $state.snapshot(enabled) as SourceToggles;
     const { reqId, items: next } = await searchApi.query(query, clean, id);
     if (reqId === reqSeq) items = next;
+  }
+
+  // Invalidate the cache, then re-run the last query — for after a mutating action
+  // (e.g. closing a tab) so the closed item drops out.
+  function refresh(): void {
+    void searchApi.prepare().then(() => runQuery(lastQuery));
   }
 </script>
 
@@ -30,7 +34,7 @@
   placeholder="Search tabs, bookmarks & history…"
   commands={commandsForItem}
   onQuery={runQuery}
-  onRefresh={() => runQuery(lastQuery)}
+  onRefresh={refresh}
 >
   {#snippet item(entry)}
     {#if entry.favIconUrl}

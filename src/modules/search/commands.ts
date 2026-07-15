@@ -4,11 +4,12 @@ import SearchIcon from '@lucide/svelte/icons/search';
 import type { Command } from '../../commands/command';
 import type { Item } from '../../search/parsers';
 import { searchApi } from './api';
+import { MODULE } from './module';
 import Search from './Search.svelte';
 
 /** Root-list entry: opens the search view. */
 export const searchCommand: Command = {
-  id: 'search',
+  id: MODULE,
   title: 'Search Tabs, Bookmarks & History',
   icon: SearchIcon,
   keywords: ['tabs', 'bookmarks', 'history', 'find'],
@@ -29,6 +30,7 @@ export function commandsForItem(item: Item): Command<Item>[] {
         id: 'close',
         title: 'Close Tab',
         icon: X,
+        shortcut: { mod: true, key: 'Backspace' },
         run: { kind: 'perform', perform: (tab) => searchApi.closeTab(tab.id), after: 'stay' }
       }
     ];

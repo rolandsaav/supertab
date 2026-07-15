@@ -43,6 +43,7 @@ src/
   shell/
     Shell.svelte          # (was App.svelte) overlay + popup + footer; renders the active view
     nav.svelte.ts         # navigation store: visible, stack, open()/push()/pop()/close()
+    footer.svelte.ts      # the view-driven footer slot — a rune singleton (decision 3)
     view.ts               # the View (Strategy) type
     RootList.svelte       # the root command list — itself a module/view
   commands/
@@ -114,25 +115,25 @@ import type { Component } from 'svelte';
 export type View = Component;
 ```
 
-**3. `Nav` — the stack, with root-as-a-module.**
+**3. `Nav` — the stack. A rune singleton, and a leaf (imports nothing from the view tree).**
 
 ```ts
 // src/shell/nav.svelte.ts
 interface Frame { view: View; title: string; }   // a stack entry
-const ROOT: Frame = { view: RootList, title: 'SuperTab' };  // not a registry entry
 
 class Nav {
   visible = $state(false);
-  stack = $state<Frame[]>([ROOT]);
+  stack = $state<Frame[]>([]);
 
-  get current(): Frame { return this.stack.at(-1)!; }
+  setRoot(frame: Frame): void { /* injected at bootstrap; seeds the stack floor (not a registry command) */ }
+  get current(): Frame | undefined { return this.stack.at(-1); }
   get canPop(): boolean { return this.stack.length > 1; }
 
-  // No target → root list. A command id → open straight into that module, root left
+  // No command → root list. A command → open straight into that module, root left
   // underneath so Escape backs out to it — unless keepRoot:false, where the module
   // becomes the whole stack and Escape closes.
-  open(target?: string, { keepRoot = true } = {}): void { /* seed stack, then push target */ }
-  push(command: Command): void { /* view → push a Frame; action → perform + close */ }
+  open(command?: Command, { keepRoot = true } = {}): void { /* seed stack, then push */ }
+  push(command: Command): void { /* view → push a Frame */ }
   pop(): void { this.canPop ? this.stack = this.stack.slice(0, -1) : this.close(); }
   close(): void { this.visible = false; }
 }
@@ -140,12 +141,16 @@ class Nav {
 export const nav = new Nav();
 ```
 
+`nav` is a leaf on purpose: the root view is injected via `setRoot` (from the shell) and
+`open` takes a resolved `Command` (from the bootstrap), so nav never imports `RootList` or
+the registry. That's what lets views `import { nav }` directly with no cycle.
+
 ## Decisions
 
 1. **Programmable open with root underneath (D1).** `open()` seeds the stack. Opening
    straight into a module leaves root beneath it, so Escape backs out to root — unless
    `keepRoot: false`, where the module is the whole stack and Escape closes. **F1 opens
-   straight into search** (`open('search')`), keeping today's zero-friction entry; the
+   straight into search** (`open(searchCommand)`), keeping today's zero-friction entry; the
    root list is one Escape away rather than in the path every time.
 2. **Module state lives inside its Svelte component (D2).** Push = mount, pop = unmount,
    so lifecycle is free — including search's "refresh the background cache on entry",
@@ -153,7 +158,7 @@ export const nav = new Nav();
    singleton `PaletteStore` shrinks to the shell nav store.
 3. **Per-item actions fold into ListView (D3).** The shell stops tracking a search-specific
    `mode`/`actionId`. Consequence: the **footer is view-driven** — the shell exposes a
-   footer slot (via context) that the active view populates; the shell owns no action
+   footer slot (a `footer` rune singleton) that the active view populates; the shell owns no action
    knowledge. ListView fills it from the highlighted item's actions.
 4. **ListView is optional, not the contract.** The module contract is "a View (a Svelte
    component)". ListView is a reusable primitive *below* that layer for the common
@@ -163,9 +168,12 @@ export const nav = new Nav();
 6. **A "module" is a convention, not a type** — a folder that exports its `Command` and
    view. `registry.ts` is the single composition point. Leverage comes from `Command` +
    `View`; there is no `Module` interface to implement.
-7. **Views reach `nav`/footer via Svelte context, not props** — keeps the `View` contract
-   prop-free and sidesteps the `nav → RootList → nav` import cycle (RootList reads nav
-   from context at runtime).
+7. **Views import the `nav`/`footer` rune singletons directly (Svelte 5 module state), not
+   context.** Context is for per-tree instances / SSR isolation — neither applies to a
+   single-instance content script. The `nav → view` import cycle is avoided by keeping
+   `nav` a **leaf** (imports nothing from the view tree): the root view is injected via
+   `nav.setRoot(...)` at bootstrap and `open` takes a resolved `Command`, so nav never
+   imports `RootList` or the registry. The `View` contract stays prop-free regardless.
 8. **One unified `Command<T>` type — no separate `Action`.** Root entries and per-item
    actions are the same type, differing only by subject `T`. A view's item-commands are a
    list; `[0]` is primary (Enter), the rest fill the action panel. Replaces

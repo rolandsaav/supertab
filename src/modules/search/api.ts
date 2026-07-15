@@ -1,5 +1,6 @@
 import type { Item, SourceToggles } from '../../search/parsers';
 import { defineProxy } from '../../bridge/rpc';
+import { MODULE } from './module';
 
 /** Privileged operations the search module runs in the background. */
 export interface SearchApi {
@@ -11,4 +12,4 @@ export interface SearchApi {
   openUrl(url: string): Promise<void>;
 }
 
-export const searchApi = defineProxy<SearchApi>('search');
+export const searchApi = defineProxy<SearchApi>(MODULE);

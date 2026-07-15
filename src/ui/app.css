@@ -118,6 +118,38 @@
   border-bottom: none;
 }
 
+/* Back arrow left of the input, shown when a view is pushed onto the stack.
+   A padded, bordered box, Raycast-style. */
+.back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 0.875em;
+  padding: 0.4em;
+  border: var(--st-border-w) solid var(--st-border);
+  border-radius: 0.5em;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--st-text);
+  cursor: pointer;
+}
+
+.back:hover,
+.back:focus-visible {
+  background: rgba(255, 255, 255, 0.1);
+  outline: none;
+}
+
+.back svg {
+  width: 1.125em;
+  height: 1.125em;
+}
+
+/* Tighten the gap to the input when the back button precedes it. */
+.back + .input {
+  padding-left: 0.5em;
+}
+
 /* Source-toggle icons: muted by default, white when the source is enabled. */
 .sources {
   display: flex;
