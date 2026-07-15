@@ -7,7 +7,7 @@
   import { footer } from '../shell/footer.svelte';
   import { status, toMessage } from '../shell/status.svelte';
   import { order } from '../search/engine';
-  import { autofocus, tabNav, matchesShortcut, OPEN_ACTIONS_SHORTCUT } from '../ui/utils.svelte';
+  import { autofocus, tabNav, matchesShortcut, OPEN_ACTIONS_SHORTCUT } from './utils.svelte';
   import ActionsPanel from './ActionsPanel.svelte';
 
   interface Props {

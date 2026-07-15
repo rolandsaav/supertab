@@ -1,8 +1,8 @@
 <script lang="ts" generics="T">
   import { Command } from 'bits-ui';
   import type { Command as PaletteCommand } from '../commands/command';
-  import { autofocus, matchesShortcut } from '../ui/utils.svelte';
-  import KeyCombo from '../ui/KeyCombo.svelte';
+  import { autofocus, matchesShortcut } from './utils.svelte';
+  import KeyCombo from './KeyCombo.svelte';
 
   interface Props {
     actions: PaletteCommand<T>[];

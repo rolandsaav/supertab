@@ -1,4 +1,4 @@
-import type { Shortcut } from '../actions/registry';
+import type { Shortcut } from '../commands/command';
 
 /** True on macOS, where the command modifier is ⌘ (metaKey) rather than Ctrl. */
 export const isMac =

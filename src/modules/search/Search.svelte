@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import ListView from '../../components/ListView.svelte';
-  import SourceIcons from '../../ui/SourceIcons.svelte';
+  import SourceIcons from './SourceIcons.svelte';
   import { searchApi } from './api';
   import { commandsForItem } from './commands';
-  import { searchPlaceholder, parseSourceCommand } from '../../ui/sources';
+  import { searchPlaceholder, parseSourceCommand } from './sources';
   import { status, toMessage } from '../../shell/status.svelte';
   import type { Item, Kind, SourceToggles } from '../../search/parsers';
 

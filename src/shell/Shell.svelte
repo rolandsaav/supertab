@@ -3,7 +3,7 @@
   import { footer } from './footer.svelte';
   import { status } from './status.svelte';
   import RootList from './RootList.svelte';
-  import Footer from '../ui/Footer.svelte';
+  import Footer from '../components/Footer.svelte';
 
   nav.setRoot({ view: RootList, title: 'SuperTab' });
   const Current = $derived(nav.current?.view);

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { SOURCE_META, SOURCE_ORDER } from './sources';
-  import type { Kind, SourceToggles } from '../search/parsers';
+  import type { Kind, SourceToggles } from '../../search/parsers';
 
   interface Props {
     enabled: SourceToggles;

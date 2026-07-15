@@ -1,7 +1,7 @@
 <script lang="ts">
   import Key from './Key.svelte';
   import { shortcutParts } from './utils.svelte';
-  import type { Shortcut } from '../actions/registry';
+  import type { Shortcut } from '../commands/command';
 
   interface Props {
     shortcut: Shortcut;
