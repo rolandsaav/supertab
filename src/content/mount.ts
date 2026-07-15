@@ -1,5 +1,5 @@
 import { mount } from 'svelte';
-import App from '../ui/App.svelte';
+import Shell from '../shell/Shell.svelte';
 import styles from '../ui/app.css?inline';
 
 export function mountApp(shadow: ShadowRoot): void {
@@ -7,5 +7,5 @@ export function mountApp(shadow: ShadowRoot): void {
   styleEl.textContent = styles;
   shadow.appendChild(styleEl);
 
-  mount(App, { target: shadow });
+  mount(Shell, { target: shadow });
 }

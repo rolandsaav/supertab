@@ -4,6 +4,7 @@ import { search, type SearchPool } from '../search/search';
 import type { Request, BridgeResponse } from '../bridge/messages';
 import type { Kind, SourceToggles } from '../search/parsers';
 import { markVisited, forget, seed } from './visited';
+import '../modules/search/background';
 
 // Fetched items held between keystrokes, filled lazily per source. Emptied on
 // palette-open (freshness) and after an idle service-worker wake, so the next
@@ -66,7 +67,12 @@ async function handle(request: Request): Promise<BridgeResponse> {
   }
 }
 
-browser.runtime.onMessage.addListener((message: unknown) => handle(message as Request));
+// Legacy Request handler. RPC envelopes (with a `module` field) belong to the new
+// dispatcher, so leave them alone while both paths coexist during migration.
+browser.runtime.onMessage.addListener((message: unknown) => {
+  if (message && typeof message === 'object' && 'module' in message) return undefined;
+  return handle(message as Request);
+});
 
 /** Fire-and-forget a visited-set update, logging any failure. */
 function track(label: string, task: Promise<unknown>): void {

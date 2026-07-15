@@ -1,0 +1,44 @@
+import ArrowRight from '@lucide/svelte/icons/arrow-right';
+import X from '@lucide/svelte/icons/x';
+import SearchIcon from '@lucide/svelte/icons/search';
+import type { Command } from '../../commands/command';
+import type { Item } from '../../search/parsers';
+import { searchApi } from './api';
+import Search from './Search.svelte';
+
+/** Root-list entry: opens the search view. */
+export const searchCommand: Command = {
+  id: 'search',
+  title: 'Search Tabs, Bookmarks & History',
+  icon: SearchIcon,
+  keywords: ['tabs', 'bookmarks', 'history', 'find'],
+  run: { kind: 'view', view: Search }
+};
+
+/** Commands for a result — [0] is the primary (Enter) action. */
+export function commandsForItem(item: Item): Command<Item>[] {
+  if (item.kind === 'tab') {
+    return [
+      {
+        id: 'activate',
+        title: 'Activate',
+        icon: ArrowRight,
+        run: { kind: 'perform', perform: (tab) => searchApi.activateTab(tab.id), after: 'close' }
+      },
+      {
+        id: 'close',
+        title: 'Close Tab',
+        icon: X,
+        run: { kind: 'perform', perform: (tab) => searchApi.closeTab(tab.id), after: 'stay' }
+      }
+    ];
+  }
+  return [
+    {
+      id: 'open',
+      title: 'Open in New Tab',
+      icon: ArrowRight,
+      run: { kind: 'perform', perform: (entry) => searchApi.openUrl(entry.url), after: 'close' }
+    }
+  ];
+}
