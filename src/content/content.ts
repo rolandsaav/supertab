@@ -1,5 +1,6 @@
 import { mountApp } from './mount';
-import { store } from '../ui/stores.svelte';
+import { nav } from '../shell/nav.svelte';
+import { searchCommand } from '../modules/search/commands';
 
 const HOST_ID = 'supertab-host';
 
@@ -38,7 +39,7 @@ function init(): void {
     console.log('[SuperTab] App mounted');
 
     const containKey = (e: Event) => {
-      if (store.visible) e.stopPropagation();
+      if (nav.visible) e.stopPropagation();
     };
     for (const type of ['keydown', 'keyup', 'keypress'] as const) {
       shadow.addEventListener(type, containKey);
@@ -55,27 +56,23 @@ function init(): void {
 
 // Toggle palette visibility on hotkey.
 function handleKeyDown(e: KeyboardEvent): void {
-  // <OPEN_KEY> toggles the palette: open when closed, close when open.
+  // <OPEN_KEY> toggles the palette: open straight into search when closed, close when open.
   if (e.key === OPEN_KEY) {
     e.preventDefault();
     e.stopPropagation();
-    if (store.visible) {
-      store.close();
+    if (nav.visible) {
+      nav.close();
     } else {
-      store.open();
+      nav.open(searchCommand);
     }
     return;
   }
 
-  // While open, Escape steps back: the actions panel first, else the palette.
-  if (store.visible && e.key === 'Escape') {
+  // While open, Escape steps back: an open popover first, then one view; past root closes.
+  if (nav.visible && e.key === 'Escape') {
     e.preventDefault();
     e.stopPropagation();
-    if (store.mode === 'actions') {
-      store.closeActions();
-    } else {
-      store.close();
-    }
+    nav.escape();
   }
 }
 

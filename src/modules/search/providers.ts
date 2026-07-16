@@ -1,6 +1,6 @@
 import browser from 'webextension-polyfill';
 import type { Bookmarks, History } from 'webextension-polyfill';
-import { getVisited } from '../background/visited';
+import { getVisited } from '../../background/visited';
 import { parseTab, parseBookmark, parseHistory } from './parsers';
 import type { Item, Kind } from './parsers';
 
