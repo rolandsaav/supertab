@@ -3,14 +3,29 @@
 **Companion to:** `docs/modular-foundation.md` (the design; its 13 decisions are binding constraints here).
 **Branch:** `modular-foundation`
 
+> **Reconciliation note (post-implementation).** This plan is a historical artifact, written
+> before two things settled. Read it with these corrections; the authoritative file/symbol
+> names live in `docs/modules.md` and `docs/modular-foundation.md`.
+> 1. **`ListView` → `shell/list/` primitives.** The planned single `ListView` god-component
+>    (a `components/ListView.svelte` configured by `items`/`getId`/`commands` props) shipped
+>    instead as composable primitives: `List.svelte` (chrome + input) and `ListItem.svelte`
+>    (one row, which registers its own actions via `list/context.ts`), with the **module
+>    owning the `{#each}`**. Read every "`ListView`" below as that `List`/`ListItem` pair.
+> 2. **Pre-migration paths.** `src/ui/*` and `src/search/*` name the **starting layout**;
+>    Phase 4 relocates them to `src/components/*`, `src/modules/search/*`, and the generic
+>    ranking to `src/lib/fuzzy.ts` (`order()`).
+> 3. **Letter-labeled decisions (A/B)** referenced below are from an earlier design draft's
+>    `ListView` decisions, since folded into the shipped design — see "Who filters — the
+>    module" and the `run.ts` behavior in `docs/modular-foundation.md`.
+
 **Starting point:** A working search-only palette. `content.ts` mounts `App.svelte` into a
 shadow root and toggles it with F1; `PaletteStore` owns all state; `background.ts` answers a
 `Request` union via a `handle` switch; search logic lives in `search/` (`search.ts`,
 `sources.ts`, `parsers.ts`, `ranking.ts`) and `background/visited.ts`. All of that keeps
 working until the cleanup phase — new code lands alongside the old.
 
-**Scope:** foundation (RPC layer, `Command`/`View`/`Nav`, generic `ListView`, shell) + migrate
-search into the first module. **No new feature modules.**
+**Scope:** foundation (RPC layer, `Command`/`View`/`Nav`, the `shell/list/` primitives, shell) +
+migrate search into the first module. **No new feature modules.**
 
 **Reuse (do not re-implement):** `search/search.ts#search`, `search/sources.ts#SOURCES`,
 `search/parsers.ts` (`Item`/`Kind`/`SourceToggles` + parsers), `search/ranking.ts#rank`
@@ -42,9 +57,11 @@ rewrite ranking or fetching.
   `pop()`, `close()` (decisions 1, 5).
 - [ ] `modules/search/api.ts`: `interface SearchApi` (`prepare`, `query`, `activateTab`,
   `closeTab`, `duplicateTab`, `openUrl`) + `export const searchApi = defineProxy<SearchApi>('search')`.
-- [ ] `components/ListView.svelte` prop contract (types only): `items`, `getId`, `placeholder`,
-  `commands: (item: T) => Command<T>[]`, `item` snippet, `header?`, `isLoading?`, `onQuery?`,
-  `onRefresh?` (decisions A, B).
+- [ ] `shell/list/` primitive prop contracts (types only). `List.svelte`: `placeholder`,
+  `isLoading?`, `query?` (bindable), `header?`, `onSearchChange?`, `onRefresh?`, `children`.
+  `ListItem.svelte<T>`: `id`, `actions: RowActions<T>`, `subject?`, `children`. The module
+  owns the `{#each}`; each `ListItem` registers its actions through `list/context.ts`.
+  *(Planned as one `components/ListView.svelte` — see the reconciliation note.)*
 
 **✓ Checkpoint:**
 - [ ] `npm run check` passes with the new type files present and referenced by stub imports.
@@ -61,9 +78,9 @@ rewrite ranking or fetching.
 - [ ] `modules/search/background.ts`: move the search `cache` + `fillPool` out of `background.ts`; implement `SearchApi` handlers by calling existing `search()`/`SOURCES`/`browser.tabs.*`; `registerModule('search', …)`. Keep the old `handle` switch untouched for now.
   - Done when: both listeners coexist; the old palette still works and the new `searchApi.query(...)` returns ranked items.
 - [ ] `shell/nav.svelte.ts` implemented; `shell/Shell.svelte` renders `nav.current.view` dynamically inside the overlay/popup (lift the shadow-DOM overlay markup from `App.svelte`).
-- [ ] `components/ListView.svelte` — **minimal**: bits-ui `Command.Root` + input + list + `{@render item()}`; Enter runs `commands(item)[0]`; `view`→`nav.push`, `perform`+`close`→perform then `nav.close()`. **Naive substring filter** in internal mode for now. No actions panel, back button, footer, toggles yet.
+- [ ] `shell/list/List.svelte` + `ListItem.svelte` — **minimal**: bits-ui `Command.Root` + input + list; the module renders rows as `children` and each `ListItem` registers its `RowActions`; Enter runs the highlighted row's `primary`; `view`→`nav.push`, `perform`+`close`→perform then `nav.close()` (via `list/run.ts#runCommand`). **Naive substring filter** for now. No actions panel, back button, footer, toggles yet.
 - [ ] `modules/search/{commands.ts,Search.svelte}` — `searchCommand` + a minimal `commandsForItem` (tab `activate`/`close`; bookmark/history `open`); `Search.svelte` wires `items`/`onQuery` to `searchApi` with `$state.snapshot(enabled)` before IPC and `reqSeq` stale-drop.
-- [ ] `shell/RootList.svelte` + `commands/registry.ts` (`COMMANDS = [searchCommand]`); `RootList` is a `ListView<Command>` (internal filter) whose primary action invokes the row's own `run`.
+- [ ] `shell/RootList.svelte` + `commands/registry.ts` (`COMMANDS = [searchCommand]`); `RootList` composes `List`/`ListItem`, filtering `COMMANDS` itself, each row's `primary` being the command's own `run`.
 - [ ] Point `content/content.ts` at `Shell` instead of `App`; F1 toggle → `nav.open('search')` (search view with root left underneath) / `nav.close()`; Escape → `nav.pop()`.
   - Done when: F1 opens the **search view directly**; typing returns tab results **via the new RPC path**; Enter on a tab activates it and the palette closes; Escape from search backs out to the root list showing "Search".
 
@@ -76,19 +93,19 @@ rewrite ranking or fetching.
 
 ---
 
-## Phase 2: Complete `ListView`
-*Goal: bring the generic primitive to parity with today's palette so search loses nothing. Refine against tracer results before starting.*
+## Phase 2: Complete the list primitives
+*Goal: bring the `shell/list/` primitives to parity with today's palette so search loses nothing. Refine against tracer results before starting.*
 
 - [ ] Actions panel overlay (right-click / shortcut), listing `commands(item)`; shortcut matching via `matchesShortcut` (reuse `utils.svelte.ts`). Folds in old `ActionsPanel` (decision 3).
 - [ ] `perform`+`after: 'stay'` → `onRefresh?.()` (decision B).
 - [ ] Back button left of input, shown when `nav.canPop`; click = `nav.pop()` (decision 11).
 - [ ] Footer slot driven by the highlighted item's primary command; define the minimal footer context the view populates (reuse `Footer.svelte`). Non-list footer stays deferred.
-- [ ] Internal filter mode upgraded from naive substring to uFuzzy (reuse the `ranking.ts`/uFuzzy approach for arbitrary string fields — decision A).
+- [ ] Internal filter upgraded from naive substring to uFuzzy via the generic `lib/fuzzy.ts#order` (arbitrary string fields), used by `RootList` in a `$derived`.
 - [ ] Keyboard nav parity: loop, vim keys, `tabNav` (reuse `utils.svelte.ts`).
 
 **✓ Checkpoint:**
 - [ ] Actions panel, back button, footer, and fuzzy root filtering all work; `after: 'stay'` refreshes without closing.
-- [ ] Reuses `utils.svelte.ts`, `ranking.ts`/uFuzzy, and `Footer.svelte` rather than re-implementing.
+- [ ] Reuses `utils.svelte.ts`, the generic uFuzzy `order()` (`lib/fuzzy.ts`), and `Footer.svelte` rather than re-implementing.
 
 ---
 
@@ -125,7 +142,7 @@ rewrite ranking or fetching.
 
 ## Deferred
 - **Shared `tabs` ops module** — deferred until a second consumer (Unload Tabs / Tab Groups) exists; extract then (rule of three, design doc "Deferred").
-- **Footer API for non-list modules** — deferred until a non-list module exists; ListView fills the footer for now (decision 3).
+- **Footer API for non-list modules** — deferred until a non-list module exists; `List` fills the footer for now (decision 3).
 - **Lazy-loaded module views** — deferred until bundle size threatens the <150 ms open target; views load eagerly (design doc "Compared to Raycast").
 - **`Command` factory library** (`copyUrl`/`openInNewTab` helpers) — deferred; nice-to-have, not foundational.
 - **`@webext-core/messaging`** — only if maintaining the hand-rolled RPC ever chafes (decision 12).
