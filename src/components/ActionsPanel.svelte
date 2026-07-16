@@ -28,16 +28,27 @@
   }
 </script>
 
-<Command.Root bind:this={commandRoot} loop onkeydown={onKeydown} class="actions">
+<Command.Root
+  bind:this={commandRoot}
+  loop
+  onkeydown={onKeydown}
+  class="actions"
+>
   <Command.List class="actions-list">
     <Command.Empty class="empty">No actions</Command.Empty>
     {#each actions as action (action.id)}
       {@const Icon = action.icon}
-      <Command.Item value={action.title} onSelect={() => onRun(action)} class="action-item">
+      <Command.Item
+        value={action.title}
+        onSelect={() => onRun(action)}
+        class="action-item"
+      >
         <Icon size={16} />
         <span class="action-label">{action.title}</span>
         {#if action.shortcut}
-          <span class="action-shortcut"><KeyCombo shortcut={action.shortcut} /></span>
+          <span class="action-shortcut"
+            ><KeyCombo shortcut={action.shortcut} /></span
+          >
         {/if}
       </Command.Item>
     {/each}

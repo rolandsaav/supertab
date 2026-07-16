@@ -15,8 +15,13 @@ async function fill(): Promise<DownloadEntry[]> {
   if (cache) {
     return cache;
   }
-  const results = await browser.downloads.search({ limit: SEARCH_LIMIT, orderBy: ['-startTime'] });
-  cache = results.filter((d) => d.filename && d.state === 'complete').map(parseDownload);
+  const results = await browser.downloads.search({
+    limit: SEARCH_LIMIT,
+    orderBy: ['-startTime'],
+  });
+  cache = results
+    .filter((d) => d.filename && d.state === 'complete')
+    .map(parseDownload);
   return cache;
 }
 
@@ -39,7 +44,7 @@ const handlers: DownloadsApi = {
   },
   async openUrl(url) {
     await browser.tabs.create({ url });
-  }
+  },
 };
 
 registerModule(MODULE, handlers);

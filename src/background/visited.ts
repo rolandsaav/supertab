@@ -22,7 +22,7 @@ function enqueue<T>(task: () => Promise<T>): Promise<T> {
   // stop this one from running.
   const thisRun = lastScheduled.then(
     () => task(), // previous task succeeded
-    () => task()  // previous task failed — run anyway
+    () => task(), // previous task failed — run anyway
   );
 
   // Move the tail forward so the NEXT enqueue() waits for this task. The

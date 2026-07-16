@@ -23,7 +23,7 @@ export const searchCommand = openView({
   title: 'Search Tabs, Bookmarks & History',
   icon: SearchIcon,
   keywords: ['tabs', 'bookmarks', 'history', 'find'],
-  view: Search
+  view: Search,
 });
 
 // Content-side only — no background needed, so no api call.
@@ -33,14 +33,14 @@ const copyUrl = action<Item>({
   icon: Link,
   shortcut: { mod: true, key: 'c' },
   do: (entry) => navigator.clipboard.writeText(entry.url),
-  after: 'stay'
+  after: 'stay',
 });
 
 const activateTab = action<Item>({
   id: 'activate',
   title: 'Activate',
   icon: ArrowRight,
-  do: (tab) => searchApi.activateTab(tab.id)
+  do: (tab) => searchApi.activateTab(tab.id),
 });
 
 const closeTab = action<Item>({
@@ -49,7 +49,7 @@ const closeTab = action<Item>({
   icon: X,
   shortcut: { mod: true, key: 'Backspace' },
   do: (tab) => searchApi.closeTab(tab.id),
-  after: 'stay'
+  after: 'stay',
 });
 
 const duplicateTab = action<Item>({
@@ -57,7 +57,7 @@ const duplicateTab = action<Item>({
   title: 'Duplicate Tab',
   icon: Copy,
   do: (tab) => searchApi.duplicateTab(tab.id),
-  after: 'stay'
+  after: 'stay',
 });
 
 const reloadTab = action<Item>({
@@ -65,21 +65,21 @@ const reloadTab = action<Item>({
   title: 'Reload Tab',
   icon: RotateCw,
   do: (tab) => searchApi.reloadTab(tab.id),
-  after: 'stay'
+  after: 'stay',
 });
 
 const openInNewTab = action<Item>({
   id: 'open',
   title: 'Open in New Tab',
   icon: ArrowRight,
-  do: (entry) => searchApi.openUrl(entry.url)
+  do: (entry) => searchApi.openUrl(entry.url),
 });
 
 const openInThisTab = action<Item>({
   id: 'open-current',
   title: 'Open in This Tab',
   icon: ArrowRightToLine,
-  do: (entry) => searchApi.openUrlInCurrentTab(entry.url)
+  do: (entry) => searchApi.openUrlInCurrentTab(entry.url),
 });
 
 const muteTab = action<Item>({
@@ -87,7 +87,7 @@ const muteTab = action<Item>({
   title: 'Mute Tab',
   icon: VolumeX,
   do: (tab) => searchApi.muteTab(tab.id, true),
-  after: 'stay'
+  after: 'stay',
 });
 
 const unmuteTab = action<Item>({
@@ -95,7 +95,7 @@ const unmuteTab = action<Item>({
   title: 'Unmute Tab',
   icon: Volume2,
   do: (tab) => searchApi.muteTab(tab.id, false),
-  after: 'stay'
+  after: 'stay',
 });
 
 const pinTab = action<Item>({
@@ -103,7 +103,7 @@ const pinTab = action<Item>({
   title: 'Pin Tab',
   icon: Pin,
   do: (tab) => searchApi.pinTab(tab.id, true),
-  after: 'stay'
+  after: 'stay',
 });
 
 const unpinTab = action<Item>({
@@ -111,7 +111,7 @@ const unpinTab = action<Item>({
   title: 'Unpin Tab',
   icon: PinOff,
   do: (tab) => searchApi.pinTab(tab.id, false),
-  after: 'stay'
+  after: 'stay',
 });
 
 /** The mute/unmute and pin/unpin toggles depend on the tab's current state. */
@@ -134,11 +134,18 @@ export function commandsForItem(item: Item): RowActions<Item> {
   if (item.kind === 'tab') {
     return {
       primary: activateTab,
-      secondary: [closeTab, copyUrl, duplicateTab, reloadTab, muteToggle(item), pinToggle(item)]
+      secondary: [
+        closeTab,
+        copyUrl,
+        duplicateTab,
+        reloadTab,
+        muteToggle(item),
+        pinToggle(item),
+      ],
     };
   }
   return {
     primary: openInNewTab,
-    secondary: [openInThisTab, copyUrl]
+    secondary: [openInThisTab, copyUrl],
   };
 }

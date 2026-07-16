@@ -18,6 +18,6 @@ export function parseDownload(item: Downloads.DownloadItem): DownloadEntry {
     filename: basename(item.filename),
     path: item.filename,
     url: item.url || '',
-    startTime: item.startTime ? new Date(item.startTime).getTime() : 0
+    startTime: item.startTime ? new Date(item.startTime).getTime() : 0,
   };
 }

@@ -27,4 +27,8 @@ export interface Command<T = void> {
 
 export type CommandRun<T> =
   | { kind: 'view'; view: View }
-  | { kind: 'perform'; perform: (subject: T) => Promise<void>; after?: 'close' | 'stay' };
+  | {
+      kind: 'perform';
+      perform: (subject: T) => Promise<void>;
+      after?: 'close' | 'stay';
+    };

@@ -20,7 +20,7 @@ export interface Source {
 async function fetchTabs(): Promise<Item[]> {
   const [tabs, visited] = await Promise.all([
     browser.tabs.query({ currentWindow: true, active: false }),
-    getVisited()
+    getVisited(),
   ]);
   return tabs.map((tab, i) => {
     const item = parseTab(tab, i);
@@ -48,7 +48,7 @@ async function fetchHistory(): Promise<Item[]> {
   const pool = await browser.history.search({
     text: '',
     startTime,
-    maxResults: HISTORY_MAX_RESULTS
+    maxResults: HISTORY_MAX_RESULTS,
   });
   const recent = [...pool]
     .sort((a, b) => (b.lastVisitTime ?? 0) - (a.lastVisitTime ?? 0))
@@ -67,5 +67,5 @@ async function fetchHistory(): Promise<Item[]> {
 export const SOURCES: Partial<Record<Kind, Source>> = {
   tab: { kind: 'tab', fetch: fetchTabs },
   bookmark: { kind: 'bookmark', fetch: fetchBookmarks },
-  history: { kind: 'history', fetch: fetchHistory }
+  history: { kind: 'history', fetch: fetchHistory },
 };

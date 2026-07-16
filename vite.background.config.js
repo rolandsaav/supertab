@@ -7,15 +7,15 @@ export default defineConfig({
       entry: 'src/background/background.ts',
       name: 'SuperTabBackground',
       formats: ['iife'],
-      fileName: () => 'background.js'
+      fileName: () => 'background.js',
     },
     outDir: 'dist',
     emptyOutDir: false,
-    sourcemap: true
+    sourcemap: true,
   },
   resolve: {
     alias: {
-      $lib: '/src'
-    }
-  }
+      $lib: '/src',
+    },
+  },
 });

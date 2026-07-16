@@ -11,7 +11,11 @@
   import type { Item, Kind, SourceToggles } from './parsers';
 
   let items = $state<Item[]>([]);
-  let enabled = $state<SourceToggles>({ tab: true, bookmark: false, history: false });
+  let enabled = $state<SourceToggles>({
+    tab: true,
+    bookmark: false,
+    history: false,
+  });
   let query = $state('');
   let lastQuery = $state('');
   let reqSeq = 0;

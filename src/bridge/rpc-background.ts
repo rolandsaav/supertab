@@ -27,7 +27,9 @@ export function registerModule(name: string, handlers: object): void {
 /** True when a message is one of our RPC envelopes. */
 function isRpcRequest(message: unknown): message is RpcRequest {
   const candidate = message as Partial<RpcRequest>;
-  return typeof candidate?.module === 'string' && typeof candidate?.op === 'string';
+  return (
+    typeof candidate?.module === 'string' && typeof candidate?.op === 'string'
+  );
 }
 
 /** Find the handler an RpcRequest names, run it, and report the outcome. */
@@ -39,7 +41,10 @@ async function runOperation(request: RpcRequest): Promise<RpcResponse> {
 
   const handler = handlers[request.op];
   if (!handler) {
-    return { ok: false, error: `Unknown operation: ${request.module}.${request.op}` };
+    return {
+      ok: false,
+      error: `Unknown operation: ${request.module}.${request.op}`,
+    };
   }
 
   try {

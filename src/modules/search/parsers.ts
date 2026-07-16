@@ -31,7 +31,7 @@ export function parseTab(tab: Tabs.Tab, index: number): Item {
     visited: false,
     muted: tab.mutedInfo?.muted ?? false,
     audible: tab.audible ?? false,
-    pinned: tab.pinned ?? false
+    pinned: tab.pinned ?? false,
   };
 }
 
@@ -46,7 +46,7 @@ export function parseBookmark(node: Bookmarks.BookmarkTreeNode): Item {
     visited: false,
     muted: false,
     audible: false,
-    pinned: false
+    pinned: false,
   };
 }
 
@@ -61,6 +61,6 @@ export function parseHistory(item: History.HistoryItem): Item {
     visited: false,
     muted: false,
     audible: false,
-    pinned: false
+    pinned: false,
   };
 }

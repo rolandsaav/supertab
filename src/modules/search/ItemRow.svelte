@@ -11,7 +11,9 @@
     class="favicon"
     src={item.favIconUrl}
     alt=""
-    onerror={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+    onerror={(e) => {
+      (e.currentTarget as HTMLImageElement).style.display = 'none';
+    }}
   />
 {/if}
 <div class="text">
@@ -25,9 +27,15 @@
   {#if item.muted}
     <VolumeX class="indicator" size={12} title="Muted" aria-label="Muted" />
   {:else if item.audible}
-    <Volume2 class="indicator" size={12} title="Playing audio" aria-label="Playing audio" />
+    <Volume2
+      class="indicator"
+      size={12}
+      title="Playing audio"
+      aria-label="Playing audio"
+    />
   {/if}
   {#if !item.visited}
-    <span class="badge" title="Not visited yet" aria-label="Not visited yet"></span>
+    <span class="badge" title="Not visited yet" aria-label="Not visited yet"
+    ></span>
   {/if}
 {/if}

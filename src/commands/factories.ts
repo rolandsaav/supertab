@@ -16,7 +16,7 @@ export function action<T>(o: {
     title: o.title,
     icon: o.icon,
     shortcut: o.shortcut,
-    run: { kind: 'perform', perform: o.do, after: o.after ?? 'close' }
+    run: { kind: 'perform', perform: o.do, after: o.after ?? 'close' },
   };
 }
 
@@ -33,6 +33,6 @@ export function openView(o: {
     title: o.title,
     icon: o.icon,
     keywords: o.keywords,
-    run: { kind: 'view', view: o.view }
+    run: { kind: 'view', view: o.view },
   };
 }

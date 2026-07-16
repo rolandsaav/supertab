@@ -9,16 +9,16 @@ export default defineConfig({
       entry: 'src/content/content.ts',
       name: 'SuperTabContent',
       formats: ['iife'],
-      fileName: () => 'content.js'
+      fileName: () => 'content.js',
     },
     outDir: 'dist',
     emptyOutDir: true,
     cssCodeSplit: false,
-    sourcemap: true
+    sourcemap: true,
   },
   resolve: {
     alias: {
-      $lib: '/src'
-    }
-  }
+      $lib: '/src',
+    },
+  },
 });

@@ -2,7 +2,7 @@
 
 **Version:** 1.0  
 **Date:** 2026-05-23  
-**Status:** Draft  
+**Status:** Draft
 
 ---
 
@@ -22,17 +22,17 @@ A **Manifest V3 browser extension** with three layers:
 
 ### Non-Goals
 
-| # | Out of scope for MVP |
-|---|----------------------|
-| 1 | Tab closing / management actions (close, mute, pin, duplicate) |
-| 2 | Persistent user settings or state (themes, keybindings, recent selections) |
-| 3 | Tab groups, tagging, split-view support |
-| 4 | Custom search-prefix redirects ("books → annas archive") |
-| 5 | Tab unloader integration |
-| 6 | Extensions management panel |
-| 7 | Settings/options page |
-| 8 | Accessibility audit beyond basic keyboard navigation |
-| 9 | Telemetry or analytics |
+| #   | Out of scope for MVP                                                       |
+| --- | -------------------------------------------------------------------------- |
+| 1   | Tab closing / management actions (close, mute, pin, duplicate)             |
+| 2   | Persistent user settings or state (themes, keybindings, recent selections) |
+| 3   | Tab groups, tagging, split-view support                                    |
+| 4   | Custom search-prefix redirects ("books → annas archive")                   |
+| 5   | Tab unloader integration                                                   |
+| 6   | Extensions management panel                                                |
+| 7   | Settings/options page                                                      |
+| 8   | Accessibility audit beyond basic keyboard navigation                       |
+| 9   | Telemetry or analytics                                                     |
 
 ### Success Metrics
 
@@ -56,6 +56,7 @@ A working prototype exists at `prototypes/fundamental-poc/` with the following p
 - Simple Svelte 5 runes (`$state`, `$derived`) for reactive UI state and a hand-rolled modal.
 
 **Prototype limitations that the MVP resolves:**
+
 - No fuzzy search (naïve `String.includes`).
 - No keyboard navigation (mouse-only).
 - Only tabs; no history or bookmarks.
@@ -93,68 +94,75 @@ supertab/
 
 ### Component Breakdown
 
-| File | Role | Added / Modified |
-|------|------|-----------------|
-| `src/content/content.js` | Shadow host creation, `appendChild` interceptor, global hotkey listener (`Cmd+K`, `Ctrl+K`, `Ctrl+Space`, `Esc`). | Modified |
-| `src/content/mount.js` | Imports Svelte app, mounts into `shadowRoot`. Keeps mount logic separate from DOM plumbing. | Added |
-| `src/ui/App.svelte` | Top-level orchestrator. Reacts to `visible` state, fetches data on open, handles `Escape` close. Uses Svelte 5 runes. | Added |
-| `src/ui/CommandPalette.svelte` | Wraps Bits UI `Command.Root`, `Command.Input`, `Command.List`, `Command.Item`. Wires fuzzy search results into the list. Svelte 5 event bindings (`onclick`, `onkeydown`). | Added |
-| `src/ui/ResultList.svelte` | Renders `Command.Item` rows with title + URL + favicon placeholder. Handles hover/keyboard selection styling. | Added |
-| `src/ui/ModeIndicator.svelte` | Small badge showing active mode. Switches on `h:` / `b:` / default prefix in query. | Added |
-| `src/ui/stores.js` | Svelte 5 runes-based state module exporting reactive state and derived values (e.g., `results` from `query + mode + rawData`). | Added |
-| `src/search/fuse-index.js` | Creates a `Fuse` index per data source with keys `['title', 'url']`. Re-ranks on query change. | Added |
-| `src/search/parsers.js` | Normalizes `chrome.tabs.Tab`, `chrome.history.HistoryItem`, `chrome.bookmarks.BookmarkTreeNode` into a uniform `{ id, type, title, url, lastAccessed }` shape. | Added |
-| `src/bridge/background-bridge.js` | Promise-wrapper around `chrome.runtime.sendMessage`. Encodes message types for TypeScript-like safety. | Added |
-| `src/background/background.js` | Message router. Routes `GET_TABS`, `GET_HISTORY`, `GET_BOOKMARKS` to respective `chrome.*` APIs. Returns uniform arrays. | Modified |
-| `public/manifest-*.json` | Chrome (MV3 service_worker) and Firefox (MV3 background.scripts) manifests with correct permissions. | Modified |
-| `vite.config.js` | Builds content script as IIFE. Copies correct manifest at build time via env flag or separate script. | Modified |
+| File                              | Role                                                                                                                                                                       | Added / Modified |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| `src/content/content.js`          | Shadow host creation, `appendChild` interceptor, global hotkey listener (`Cmd+K`, `Ctrl+K`, `Ctrl+Space`, `Esc`).                                                          | Modified         |
+| `src/content/mount.js`            | Imports Svelte app, mounts into `shadowRoot`. Keeps mount logic separate from DOM plumbing.                                                                                | Added            |
+| `src/ui/App.svelte`               | Top-level orchestrator. Reacts to `visible` state, fetches data on open, handles `Escape` close. Uses Svelte 5 runes.                                                      | Added            |
+| `src/ui/CommandPalette.svelte`    | Wraps Bits UI `Command.Root`, `Command.Input`, `Command.List`, `Command.Item`. Wires fuzzy search results into the list. Svelte 5 event bindings (`onclick`, `onkeydown`). | Added            |
+| `src/ui/ResultList.svelte`        | Renders `Command.Item` rows with title + URL + favicon placeholder. Handles hover/keyboard selection styling.                                                              | Added            |
+| `src/ui/ModeIndicator.svelte`     | Small badge showing active mode. Switches on `h:` / `b:` / default prefix in query.                                                                                        | Added            |
+| `src/ui/stores.js`                | Svelte 5 runes-based state module exporting reactive state and derived values (e.g., `results` from `query + mode + rawData`).                                             | Added            |
+| `src/search/fuse-index.js`        | Creates a `Fuse` index per data source with keys `['title', 'url']`. Re-ranks on query change.                                                                             | Added            |
+| `src/search/parsers.js`           | Normalizes `chrome.tabs.Tab`, `chrome.history.HistoryItem`, `chrome.bookmarks.BookmarkTreeNode` into a uniform `{ id, type, title, url, lastAccessed }` shape.             | Added            |
+| `src/bridge/background-bridge.js` | Promise-wrapper around `chrome.runtime.sendMessage`. Encodes message types for TypeScript-like safety.                                                                     | Added            |
+| `src/background/background.js`    | Message router. Routes `GET_TABS`, `GET_HISTORY`, `GET_BOOKMARKS` to respective `chrome.*` APIs. Returns uniform arrays.                                                   | Modified         |
+| `public/manifest-*.json`          | Chrome (MV3 service_worker) and Firefox (MV3 background.scripts) manifests with correct permissions.                                                                       | Modified         |
+| `vite.config.js`                  | Builds content script as IIFE. Copies correct manifest at build time via env flag or separate script.                                                                      | Modified         |
 
 ### Architectural Decisions
 
 #### 1. Svelte 5 + Vite
+
 **Rationale:** Svelte 5 offers fine-grained reactivity via runes (`$state`, `$derived`, `$effect`), eliminating the need for the `svelte/store` API and making reactive logic more explicit and performant. It is the current stable release and the direction of the ecosystem.  
 **Trade-off:** Svelte 5's style injection mechanism may differ from Svelte 4's `css: 'injected'` behavior. The Shadow DOM interceptor must be validated during implementation. Bits UI must be on a version compatible with Svelte 5 (use `bits-ui@next` or latest).  
 **Migration note:** All reactive state moves from `writable`/`derived` stores to runes. Event handlers use `onclick` instead of `on:click`. Lifecycle uses `$effect` instead of `onMount` where appropriate.
 
 #### 2. Shadow DOM + `appendChild` Interceptor (retained from prototype)
+
 **Rationale:** Achieves full style isolation from host pages with zero additional build tooling. No FOUC observed in prototype.  
 **Trade-off:** Relies on a runtime monkey-patch of `document.head.appendChild`. Svelte 5 may inject styles differently than Svelte 4 (e.g., via `adoptedStyleSheets` or different timing). Mitigation: validate interceptor during Svelte 5 integration; fall back to build-time CSS string extraction if the interceptor fails. Add a CI test that asserts styles are present inside `#shadow-root` after mount.  
 **Alternative considered:** Build-time extraction of CSS into a string and manual `<style>` injection. Rejected for MVP to avoid custom Rollup plugins; re-evaluate if interceptor breaks.
 
 #### 3. Bits UI `Command` Component
+
 **Rationale:** Provides accessible, keyboard-navigable list primitives (↓↑, Enter, Escape) out of the box. Aligns with "keyboard-first" requirement.  
 **Trade-off:** Adds a dependency. Bits UI is headless, so styling remains fully custom.  
 **Alternative considered:** Hand-rolled keyboard navigation. Rejected: reinvents accessibility and focus management.
 
 #### 4. Fuse.js for Fuzzy Search
+
 **Rationale:** Mature, zero-config fuzzy search with configurable keys and threshold. Works in browser with no build headaches.  
 **Trade-off:** Not the fastest library for 10k+ history items. For MVP history/bookmark volume, performance is acceptable.  
 **Alternative considered:** `fast-fuzzy`, `fuzzysort`. Rejected: Fuse.js has better API for multi-key searching and ranking customization.
 
 #### 5. No Persistence Layer
+
 **Rationale:** MVP is ephemeral. "Recently used" ordering is derived from `chrome.tabs` / `chrome.history` `lastAccessedTime`, not a local cache.  
 **Trade-off:** Cannot learn user habits beyond what the browser APIs expose. Acceptable for MVP.
 
 #### 6. Cross-Browser via Dual Manifests + Build Flag
+
 **Rationale:** Chrome and Firefox both use MV3, but with incompatible background fields (`service_worker` vs `background.scripts`). A build-time flag copies the correct manifest.  
 **Trade-off:** Two manifests to maintain. For a small extension, this is simpler than a manifest generator.  
 **Alternative considered:** `webextension-polyfill` + dynamic manifest generation. Rejected: adds complexity; can adopt later if manifest divergence grows.
 
 #### 7. Background Service Worker as API Proxy
+
 **Rationale:** Content scripts cannot access `chrome.history` or `chrome.bookmarks` directly. A message-passing proxy is the standard MV3 pattern.  
 **Trade-off:** Async latency (~5–20 ms) per message. Negligible for human-scale interactions.
 
 ### Impact Analysis
 
-| Dimension | Before (Prototype) | After (MVP) |
-|-----------|-------------------|-------------|
-| Search | Naïve `includes` | Fuse.js fuzzy ranking across title + URL |
-| Navigation | Mouse-only click | Full keyboard (arrows / vim keys / Enter / Esc) via Bits UI |
-| Data sources | Tabs only | Tabs + History + Bookmarks |
-| Ordering | Unordered | Recently-used by default; search-score when query is non-empty |
-| Mode switching | None | Prefix-based (`h:`, `b:`) + default tabs |
-| Browser support | Chrome only | Chrome + Firefox |
-| Close action | N/A (not implemented) | Explicitly out of scope |
+| Dimension       | Before (Prototype)    | After (MVP)                                                    |
+| --------------- | --------------------- | -------------------------------------------------------------- |
+| Search          | Naïve `includes`      | Fuse.js fuzzy ranking across title + URL                       |
+| Navigation      | Mouse-only click      | Full keyboard (arrows / vim keys / Enter / Esc) via Bits UI    |
+| Data sources    | Tabs only             | Tabs + History + Bookmarks                                     |
+| Ordering        | Unordered             | Recently-used by default; search-score when query is non-empty |
+| Mode switching  | None                  | Prefix-based (`h:`, `b:`) + default tabs                       |
+| Browser support | Chrome only           | Chrome + Firefox                                               |
+| Close action    | N/A (not implemented) | Explicitly out of scope                                        |
 
 ---
 
@@ -194,22 +202,22 @@ supertab/
 
 ### Startup & Runtime Validation
 
-| Check | Failure mode |
-|-------|-------------|
-| `chrome.runtime` is defined | Log warning if running outside extension context (e.g., dev server) |
-| Shadow host attaches successfully | Throw if `attachShadow` fails (should never happen) |
-| Svelte 5 styles land in shadow root | Log warning if interceptor missed; palette may render unstyled |
-| Background responds to `GET_TABS` within 2 s | If timeout, show empty state with "Could not load tabs" message |
+| Check                                        | Failure mode                                                        |
+| -------------------------------------------- | ------------------------------------------------------------------- |
+| `chrome.runtime` is defined                  | Log warning if running outside extension context (e.g., dev server) |
+| Shadow host attaches successfully            | Throw if `attachShadow` fails (should never happen)                 |
+| Svelte 5 styles land in shadow root          | Log warning if interceptor missed; palette may render unstyled      |
+| Background responds to `GET_TABS` within 2 s | If timeout, show empty state with "Could not load tabs" message     |
 
 ### Risk Assessment & Mitigation
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|------------|
-| Svelte 5 style-injection differs from Svelte 4 | Medium | High | Validate interceptor during integration; have fallback build-time CSS injection ready |
-| Fuse.js performance degrades with large history | Medium | Medium | Cap history fetch to last 500 items; add debounce (150 ms) on query input |
-| Firefox MV3 support lags / differs | Medium | Medium | Use MV3 with `background.scripts` (Firefox event page); test in Firefox Dev Edition |
-| Bits UI `Command` API changes in major version | Low | Medium | Pin version; migration is localized to `CommandPalette.svelte` |
-| Hotkey conflicts with host page or other extensions | Medium | Low | Use `preventDefault()` + `stopPropagation()`; document known conflicts |
+| Risk                                                | Likelihood | Impact | Mitigation                                                                            |
+| --------------------------------------------------- | ---------- | ------ | ------------------------------------------------------------------------------------- |
+| Svelte 5 style-injection differs from Svelte 4      | Medium     | High   | Validate interceptor during integration; have fallback build-time CSS injection ready |
+| Fuse.js performance degrades with large history     | Medium     | Medium | Cap history fetch to last 500 items; add debounce (150 ms) on query input             |
+| Firefox MV3 support lags / differs                  | Medium     | Medium | Use MV3 with `background.scripts` (Firefox event page); test in Firefox Dev Edition   |
+| Bits UI `Command` API changes in major version      | Low        | Medium | Pin version; migration is localized to `CommandPalette.svelte`                        |
+| Hotkey conflicts with host page or other extensions | Medium     | Low    | Use `preventDefault()` + `stopPropagation()`; document known conflicts                |
 
 ---
 
@@ -217,12 +225,12 @@ supertab/
 
 ### Testing Strategy
 
-| Layer | Approach |
-|-------|----------|
-| **Unit** | Test `parsers.js` normalization logic with mock chrome API objects. Test Fuse.js ranking with fixture data. |
-| **Integration** | Mock `chrome.runtime.sendMessage` and verify background router dispatches to correct API. |
-| **E2E (manual)** | Load unpacked extension in Chrome + Firefox. Verify hotkey opens palette, fuzzy search ranks correctly, Enter switches tab, Escape closes, mode prefixes work. |
-| **Visual regression** | Not for MVP. Rely on Svelte scoped CSS + manual spot-checks. |
+| Layer                 | Approach                                                                                                                                                       |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Unit**              | Test `parsers.js` normalization logic with mock chrome API objects. Test Fuse.js ranking with fixture data.                                                    |
+| **Integration**       | Mock `chrome.runtime.sendMessage` and verify background router dispatches to correct API.                                                                      |
+| **E2E (manual)**      | Load unpacked extension in Chrome + Firefox. Verify hotkey opens palette, fuzzy search ranks correctly, Enter switches tab, Escape closes, mode prefixes work. |
+| **Visual regression** | Not for MVP. Rely on Svelte scoped CSS + manual spot-checks.                                                                                                   |
 
 ### Benchmarking
 
@@ -271,22 +279,22 @@ supertab/
 
 ### Open Questions & FAQ
 
-| # | Question | Status |
-|---|----------|--------|
-| 1 | What are the exact vim keybindings? `j/k` for ↓↑, `Ctrl+j/k`? Or just arrows + `j/k` when input is not focused? | **Resolved** — `j/k` navigate when search input is not focused. `Tab` / `Shift+Tab` also cycle through results. Arrows always work. |
-| 2 | Should history mode show *all* history or a capped recent subset (e.g., last 30 days or 500 items)? | **Resolved** — Cap to 500 most-recent items. |
-| 3 | Do bookmarks include folders, or only leaf URLs? | **Resolved** — Leaf URLs and their titles only. Folders are excluded. |
-| 4 | Favicons: can we use `chrome://favicon/size/16@1x/<url>` or fetch from Google's service? | **Resolved** — Favicons are required. Use `https://www.google.com/s2/favicons?domain=<hostname>&sz=32` as a cross-browser fallback. Cache results in a `Map` to avoid repeated requests. |
-| 5 | Should the palette remember the last query when reopened, or start fresh? | **Resolved** — Clear query and mode on every open. Fresh start. |
+| #   | Question                                                                                                        | Status                                                                                                                                                                                   |
+| --- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | What are the exact vim keybindings? `j/k` for ↓↑, `Ctrl+j/k`? Or just arrows + `j/k` when input is not focused? | **Resolved** — `j/k` navigate when search input is not focused. `Tab` / `Shift+Tab` also cycle through results. Arrows always work.                                                      |
+| 2   | Should history mode show _all_ history or a capped recent subset (e.g., last 30 days or 500 items)?             | **Resolved** — Cap to 500 most-recent items.                                                                                                                                             |
+| 3   | Do bookmarks include folders, or only leaf URLs?                                                                | **Resolved** — Leaf URLs and their titles only. Folders are excluded.                                                                                                                    |
+| 4   | Favicons: can we use `chrome://favicon/size/16@1x/<url>` or fetch from Google's service?                        | **Resolved** — Favicons are required. Use `https://www.google.com/s2/favicons?domain=<hostname>&sz=32` as a cross-browser fallback. Cache results in a `Map` to avoid repeated requests. |
+| 5   | Should the palette remember the last query when reopened, or start fresh?                                       | **Resolved** — Clear query and mode on every open. Fresh start.                                                                                                                          |
 
 ### Glossary
 
-| Term | Definition |
-|------|------------|
-| **FOUC** | Flash of Unstyled Content — a brief moment where DOM is visible before CSS loads. |
-| **MV3** | Manifest V3, the current Chrome extension format using service workers. |
-| **Shadow DOM** | A browser API for encapsulating DOM subtrees and their styles from the host document. |
-| **Bits UI** | A headless Svelte component library (successor to Melt UI) providing accessible primitives. |
-| **Fuse.js** | A lightweight fuzzy-search library for JavaScript. |
-| **IIFE** | Immediately Invoked Function Expression — the bundle format for content scripts to avoid polluting global scope. |
-| **Sideberry** | A Firefox extension for vertical tab management; the tool Super Tab aims to replace. |
+| Term           | Definition                                                                                                       |
+| -------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **FOUC**       | Flash of Unstyled Content — a brief moment where DOM is visible before CSS loads.                                |
+| **MV3**        | Manifest V3, the current Chrome extension format using service workers.                                          |
+| **Shadow DOM** | A browser API for encapsulating DOM subtrees and their styles from the host document.                            |
+| **Bits UI**    | A headless Svelte component library (successor to Melt UI) providing accessible primitives.                      |
+| **Fuse.js**    | A lightweight fuzzy-search library for JavaScript.                                                               |
+| **IIFE**       | Immediately Invoked Function Expression — the bundle format for content scripts to avoid polluting global scope. |
+| **Sideberry**  | A Firefox extension for vertical tab management; the tool Super Tab aims to replace.                             |

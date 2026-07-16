@@ -7,7 +7,7 @@ import type { Command } from '../../commands/command';
 export async function runCommand<T>(
   command: Command<T>,
   subject: T,
-  onRefresh?: () => void
+  onRefresh?: () => void,
 ): Promise<void> {
   status.error = '';
   if (command.run.kind === 'view') {

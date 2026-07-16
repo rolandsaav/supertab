@@ -2,7 +2,8 @@ import type { Command, Shortcut } from '../commands/command';
 
 /** True on macOS, where the command modifier is ⌘ (metaKey) rather than Ctrl. */
 export const isMac =
-  typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
+  typeof navigator !== 'undefined' &&
+  /Mac|iPhone|iPad/.test(navigator.platform);
 
 const KEY_LABELS: Record<string, string> = { enter: '↵', backspace: '⌫' };
 
@@ -32,7 +33,10 @@ export function matchesShortcut(e: KeyboardEvent, s: Shortcut): boolean {
 }
 
 /** The first action whose shortcut matches the event, if any. */
-export function matchAction<T>(e: KeyboardEvent, actions: Command<T>[]): Command<T> | undefined {
+export function matchAction<T>(
+  e: KeyboardEvent,
+  actions: Command<T>[],
+): Command<T> | undefined {
   return actions.find((a) => a.shortcut && matchesShortcut(e, a.shortcut));
 }
 
@@ -43,7 +47,7 @@ export function matchAction<T>(e: KeyboardEvent, actions: Command<T>[]): Command
  */
 export function tabNav(
   e: KeyboardEvent,
-  command: { updateSelectedByItem: (change: number) => void } | null
+  command: { updateSelectedByItem: (change: number) => void } | null,
 ): void {
   if (e.key !== 'Tab') return;
   e.preventDefault();
@@ -53,7 +57,7 @@ export function tabNav(
 /** Focus the input on mount and whenever `shouldFocus()` becomes true. */
 export function autofocus(
   input: () => HTMLInputElement | null,
-  shouldFocus: () => boolean = () => true
+  shouldFocus: () => boolean = () => true,
 ): void {
   $effect(() => {
     if (shouldFocus() && input()) {

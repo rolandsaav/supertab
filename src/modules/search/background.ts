@@ -13,12 +13,12 @@ let cache: SearchPool = {};
 /** Fetch any enabled source missing from the cache, in parallel. */
 async function fillPool(enabled: SourceToggles): Promise<void> {
   const missing = (Object.keys(enabled) as Kind[]).filter(
-    (kind) => enabled[kind] && SOURCES[kind] && cache[kind] === undefined
+    (kind) => enabled[kind] && SOURCES[kind] && cache[kind] === undefined,
   );
   await Promise.all(
     missing.map(async (kind) => {
       cache[kind] = await SOURCES[kind]!.fetch();
-    })
+    }),
   );
 }
 
@@ -27,7 +27,10 @@ const toTabId = (id: string): number => Number(id);
 
 /** Duplicate a tab without leaving the copy focused, so the palette stays put. */
 async function duplicateTab(id: string): Promise<void> {
-  const [active] = await browser.tabs.query({ currentWindow: true, active: true });
+  const [active] = await browser.tabs.query({
+    currentWindow: true,
+    active: true,
+  });
   await browser.tabs.duplicate(toTabId(id));
   if (active?.id != null) {
     await browser.tabs.update(active.id, { active: true });
@@ -62,11 +65,14 @@ const handlers: SearchApi = {
     await browser.tabs.create({ url });
   },
   async openUrlInCurrentTab(url) {
-    const [active] = await browser.tabs.query({ currentWindow: true, active: true });
+    const [active] = await browser.tabs.query({
+      currentWindow: true,
+      active: true,
+    });
     if (active?.id != null) {
       await browser.tabs.update(active.id, { url });
     }
-  }
+  },
 };
 
 registerModule(MODULE, handlers);

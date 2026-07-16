@@ -9,8 +9,7 @@ export interface RpcRequest {
 
 /** Reply shape: the unwrapped return value, or a serialized error. */
 export type RpcResponse =
-  | { ok: true; value: unknown }
-  | { ok: false; error: string };
+  { ok: true; value: unknown } | { ok: false; error: string };
 
 /**
  * A remote stand-in for a module's background API. Every property access returns a
@@ -24,7 +23,7 @@ export function defineProxy<T extends object>(module: string): T {
       const op = String(property);
       // Accessing `api.query` yields this function; calling it sends { module, op: 'query', args }.
       return (...args: unknown[]) => sendRequest({ module, op, args });
-    }
+    },
   };
   return new Proxy({} as T, handler);
 }

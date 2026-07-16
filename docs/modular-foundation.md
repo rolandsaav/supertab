@@ -5,7 +5,7 @@
 
 ## Goal
 
-Today the palette *is* the search. We want to make search one module among many,
+Today the palette _is_ the search. We want to make search one module among many,
 Raycast-style. The palette becomes a shell that hosts interchangeable **modules**;
 search is the first, and future modules (unload tabs, search downloads, tab groups,
 manage extensions, …) plug into the same foundation.
@@ -24,17 +24,17 @@ into a module. No new feature modules yet.
 
 We name things in the code to reflect the patterns deliberately.
 
-| Pattern | Where | Role |
-|---|---|---|
-| **Command** | `Command<T>` — every invocable thing, root entries *and* per-item actions | Encapsulate a request (open a view, or perform an effect), optionally bound to a subject. |
-| **Strategy** | `View` (the swappable module component the shell renders) | The shell holds the active view and delegates rendering to it; hotkeys select which one is live. |
-| **Bridge** | shell ↔ module split; also the `ops` interface across the IPC seam | Abstraction and implementation vary independently. |
-| **Composite** | root command list is itself a module/view; the nav stack is a path through a tree of views | The root is treated like any other view. |
-| **Proxy** | `defineProxy` / a module's `ops` object in the content context | A remote stand-in that turns method calls into IPC to the background. |
-| **Facade / Mediator** | the background dispatcher | Routes generic RPC envelopes to per-module handler maps. |
+| Pattern               | Where                                                                                      | Role                                                                                             |
+| --------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| **Command**           | `Command<T>` — every invocable thing, root entries _and_ per-item actions                  | Encapsulate a request (open a view, or perform an effect), optionally bound to a subject.        |
+| **Strategy**          | `View` (the swappable module component the shell renders)                                  | The shell holds the active view and delegates rendering to it; hotkeys select which one is live. |
+| **Bridge**            | shell ↔ module split; also the `ops` interface across the IPC seam                         | Abstraction and implementation vary independently.                                               |
+| **Composite**         | root command list is itself a module/view; the nav stack is a path through a tree of views | The root is treated like any other view.                                                         |
+| **Proxy**             | `defineProxy` / a module's `ops` object in the content context                             | A remote stand-in that turns method calls into IPC to the background.                            |
+| **Facade / Mediator** | the background dispatcher                                                                  | Routes generic RPC envelopes to per-module handler maps.                                         |
 
 Note: Strategy and Bridge are the same shell↔module split viewed behaviorally vs
-structurally. They coincide here because the implementation we swap *is* the behavior.
+structurally. They coincide here because the implementation we swap _is_ the behavior.
 
 ## Architecture
 
@@ -82,7 +82,7 @@ src/
 
 ### Three core abstractions
 
-**1. `Command<T>` — the Command pattern, unified.** *Everything* invocable is a Command:
+**1. `Command<T>` — the Command pattern, unified.** _Everything_ invocable is a Command:
 root entries (open a view / perform a one-shot) and the per-item actions inside a module
 (activate, close, copy URL, …). The only difference between them is the **subject** — a
 root command acts on nothing (`T = void`); an item action acts on the highlighted item
@@ -103,13 +103,17 @@ export interface Command<T = void> {
   title: string;
   icon: Component;
   keywords?: string[];
-  shortcut?: Shortcut;                 // for invoking from a view's action panel
+  shortcut?: Shortcut; // for invoking from a view's action panel
   run: CommandRun<T>;
 }
 
 export type CommandRun<T> =
-  | { kind: 'view'; view: View }                                          // push a view — go deeper
-  | { kind: 'perform'; perform: (subject: T) => Promise<void>; after?: 'close' | 'stay' };
+  | { kind: 'view'; view: View } // push a view — go deeper
+  | {
+      kind: 'perform';
+      perform: (subject: T) => Promise<void>;
+      after?: 'close' | 'stay';
+    };
 ```
 
 The `view | perform` discriminant lets the shell stay smart without knowing specifics: a
@@ -122,7 +126,7 @@ gives each row a `RowActions<T>` — a required `primary` (run on Enter) plus op
 Raycast keeps root Commands and in-view Actions as separate concepts; we unify because our
 only real axis of difference is the subject, which the generic captures cleanly.
 
-**2. `View` — the Strategy the shell renders.** A View is *just* a Svelte component —
+**2. `View` — the Strategy the shell renders.** A View is _just_ a Svelte component —
 the whole module contract. No required props; it reaches navigation and the footer
 through the `nav`/`footer` rune singletons (decision 7), so any component conforms with
 zero boilerplate (a non-list module owes nothing to the list primitives).
@@ -137,23 +141,40 @@ export type View = Component;
 
 ```ts
 // src/shell/nav.svelte.ts
-interface Frame { view: View; title: string; }   // a stack entry
+interface Frame {
+  view: View;
+  title: string;
+} // a stack entry
 
 class Nav {
   visible = $state(false);
   stack = $state<Frame[]>([]);
 
-  setRoot(frame: Frame): void { /* injected at bootstrap; seeds the stack floor (not a registry command) */ }
-  get current(): Frame | undefined { return this.stack.at(-1); }
-  get canPop(): boolean { return this.stack.length > 1; }
+  setRoot(frame: Frame): void {
+    /* injected at bootstrap; seeds the stack floor (not a registry command) */
+  }
+  get current(): Frame | undefined {
+    return this.stack.at(-1);
+  }
+  get canPop(): boolean {
+    return this.stack.length > 1;
+  }
 
   // No command → root list. A command → open straight into that module, root left
   // underneath so Escape backs out to it — unless keepRoot:false, where the module
   // becomes the whole stack and Escape closes.
-  open(command?: Command, { keepRoot = true } = {}): void { /* seed stack, then push */ }
-  push(command: Command): void { /* view → push a Frame */ }
-  pop(): void { this.canPop ? this.stack = this.stack.slice(0, -1) : this.close(); }
-  close(): void { this.visible = false; }
+  open(command?: Command, { keepRoot = true } = {}): void {
+    /* seed stack, then push */
+  }
+  push(command: Command): void {
+    /* view → push a Frame */
+  }
+  pop(): void {
+    this.canPop ? (this.stack = this.stack.slice(0, -1)) : this.close();
+  }
+  close(): void {
+    this.visible = false;
+  }
 }
 
 export const nav = new Nav();
@@ -179,10 +200,10 @@ the registry. That's what lets views `import { nav }` directly with no cycle.
    exposes a footer slot (a `footer` rune singleton) that the active view populates; the shell
    owns no action knowledge. `List` fills it from the highlighted row's actions.
 4. **The list primitives are optional, not the contract.** The module contract is "a View (a
-   Svelte component)". `List`/`ListItem` are reusable primitives *below* that layer for the
+   Svelte component)". `List`/`ListItem` are reusable primitives _below_ that layer for the
    common list-shaped case. Non-list modules (forms, dashboards, …) render whatever they want.
 5. **Root is a special `Frame`, not a registry `Command`** — otherwise root would list
-   itself. The registry is *what root renders*, not root itself.
+   itself. The registry is _what root renders_, not root itself.
 6. **A "module" is a convention, not a type** — a folder that exports its `Command` and
    view. `registry.ts` is the single composition point. Leverage comes from `Command` +
    `View`; there is no `Module` interface to implement.
@@ -220,18 +241,18 @@ the registry. That's what lets views `import { nav }` directly with no cycle.
 ## Actions vs. operations (the IPC boundary)
 
 "Runs in the background" is a property of an **operation**, not a command. A command's
-`perform` always executes in the content context (where the palette lives); it *calls
-into* privileged operations when it needs them. The boundary sits at the operation, not
-the command — e.g. "Close Tab" needs the background (`tabs.remove`) *then* a content-side
+`perform` always executes in the content context (where the palette lives); it _calls
+into_ privileged operations when it needs them. The boundary sits at the operation, not
+the command — e.g. "Close Tab" needs the background (`tabs.remove`) _then_ a content-side
 toast; "Copy URL" is content-only. So a `perform` freely composes local calls + privileged
 ops.
 
-The module's `api` interface is the single source of truth and *is* the Bridge seam
+The module's `api` interface is the single source of truth and _is_ the Bridge seam
 between the two contexts. Content gets a **Proxy** that turns method calls into IPC;
-background *implements* the same interface. Both halves are shown in full under
+background _implements_ the same interface. Both halves are shown in full under
 [Anatomy of a module](#anatomy-of-a-module).
 
-`api.ts` imports only the *type* of the interface (`import type`), so all the
+`api.ts` imports only the _type_ of the interface (`import type`), so all the
 `browser.*`/cache code stays out of the content bundle.
 
 ### RPC lifecycle
@@ -251,33 +272,51 @@ background *implements* the same interface. Both halves are shown in full under
 
 ```ts
 // bridge/rpc.ts  (shared) — content-side Proxy factory
-export interface RpcRequest { module: string; op: string; args: unknown[]; }
-export type RpcResponse = { ok: true; value: unknown } | { ok: false; error: string };
+export interface RpcRequest {
+  module: string;
+  op: string;
+  args: unknown[];
+}
+export type RpcResponse =
+  { ok: true; value: unknown } | { ok: false; error: string };
 
 export function defineProxy<T extends object>(module: string): T {
   return new Proxy({} as T, {
-    get: (_t, op: string) => (...args: unknown[]) => call({ module, op, args })
+    get:
+      (_t, op: string) =>
+      (...args: unknown[]) =>
+        call({ module, op, args }),
   });
 }
 ```
 
 ```ts
 // bridge/rpc-background.ts — the dispatcher (Facade/Mediator)
-const REGISTRY: Record<string, Record<string, (...a: any[]) => Promise<unknown>>> = {};
-export function registerModule(name: string, handlers: object) { REGISTRY[name] = handlers as any; }
+const REGISTRY: Record<
+  string,
+  Record<string, (...a: any[]) => Promise<unknown>>
+> = {};
+export function registerModule(name: string, handlers: object) {
+  REGISTRY[name] = handlers as any;
+}
 
-browser.runtime.onMessage.addListener(async (msg: RpcRequest): Promise<RpcResponse> => {
-  const fn = REGISTRY[msg.module]?.[msg.op];
-  if (!fn) return { ok: false, error: `Unknown op ${msg.module}.${msg.op}` };
-  try { return { ok: true, value: await fn(...msg.args) }; }
-  catch (e) { return { ok: false, error: String(e) }; }
-});
+browser.runtime.onMessage.addListener(
+  async (msg: RpcRequest): Promise<RpcResponse> => {
+    const fn = REGISTRY[msg.module]?.[msg.op];
+    if (!fn) return { ok: false, error: `Unknown op ${msg.module}.${msg.op}` };
+    try {
+      return { ok: true, value: await fn(...msg.args) };
+    } catch (e) {
+      return { ok: false, error: String(e) };
+    }
+  },
+);
 ```
 
 `background/background.ts` collapses to: `import` each module's `background.ts` for its
 side-effect registration, plus the truly global lifecycle bits (the visited-set
 `onStartup`/`onActivated`/`onRemoved` listeners). The monolithic switch is gone; each
-module owns its own handlers *and* its own background state.
+module owns its own handlers _and_ its own background state.
 
 ### Deferred: shared tab ops
 
@@ -351,7 +390,11 @@ import { defineProxy } from '../../bridge/rpc';
 /** Privileged operations the search module runs in the background. */
 export interface SearchApi {
   prepare(): Promise<void>;
-  query(q: string, enabled: SourceToggles, reqId: number): Promise<{ reqId: number; items: Item[] }>;
+  query(
+    q: string,
+    enabled: SourceToggles,
+    reqId: number,
+  ): Promise<{ reqId: number; items: Item[] }>;
   activateTab(id: string): Promise<void>;
   closeTab(id: string): Promise<void>;
   duplicateTab(id: string): Promise<void>;
@@ -371,32 +414,48 @@ import { search, type SearchPool } from '../../search/search';
 import type { Kind, SourceToggles } from './parsers';
 import type { SearchApi } from './api';
 
-let cache: SearchPool = {};   // the search cache now lives with the module, not in background.ts
+let cache: SearchPool = {}; // the search cache now lives with the module, not in background.ts
 
 async function fillPool(enabled: SourceToggles): Promise<void> {
   const missing = (Object.keys(enabled) as Kind[]).filter(
-    (k) => enabled[k] && SOURCES[k] && cache[k] === undefined
+    (k) => enabled[k] && SOURCES[k] && cache[k] === undefined,
   );
-  await Promise.all(missing.map(async (k) => { cache[k] = await SOURCES[k]!.fetch(); }));
+  await Promise.all(
+    missing.map(async (k) => {
+      cache[k] = await SOURCES[k]!.fetch();
+    }),
+  );
 }
 
 // Duplicate without leaving the copy focused, so the palette stays put.
 async function duplicateTab(id: string): Promise<void> {
-  const [active] = await browser.tabs.query({ currentWindow: true, active: true });
+  const [active] = await browser.tabs.query({
+    currentWindow: true,
+    active: true,
+  });
   await browser.tabs.duplicate(Number(id));
-  if (active?.id != null) await browser.tabs.update(active.id, { active: true });
+  if (active?.id != null)
+    await browser.tabs.update(active.id, { active: true });
 }
 
 const handlers: SearchApi = {
-  async prepare() { cache = {}; },
+  async prepare() {
+    cache = {};
+  },
   async query(q, enabled, reqId) {
     await fillPool(enabled);
     return { reqId, items: search(cache, enabled, q) };
   },
-  async activateTab(id) { await browser.tabs.update(Number(id), { active: true }); },
-  async closeTab(id) { await browser.tabs.remove(Number(id)); },
+  async activateTab(id) {
+    await browser.tabs.update(Number(id), { active: true });
+  },
+  async closeTab(id) {
+    await browser.tabs.remove(Number(id));
+  },
   duplicateTab,
-  async openUrl(url) { await browser.tabs.create({ url }); }
+  async openUrl(url) {
+    await browser.tabs.create({ url });
+  },
 };
 
 registerModule('search', handlers);
@@ -424,31 +483,57 @@ export const searchCommand = openView({
   title: 'Search Tabs, Bookmarks & History',
   icon: SearchIcon,
   keywords: ['tabs', 'bookmarks', 'history', 'find'],
-  view: Search
+  view: Search,
 });
 
 // Content-side only — no background needed, so no api call.
 const copyUrl = action<Item>({
-  id: 'copy-url', title: 'Copy URL', icon: Link, shortcut: { mod: true, key: 'c' },
-  do: (item) => navigator.clipboard.writeText(item.url), after: 'stay'
+  id: 'copy-url',
+  title: 'Copy URL',
+  icon: Link,
+  shortcut: { mod: true, key: 'c' },
+  do: (item) => navigator.clipboard.writeText(item.url),
+  after: 'stay',
 });
 
 /** A result's actions — the primary runs on Enter, the secondaries fill the panel. */
 export function commandsForItem(item: Item): RowActions<Item> {
   if (item.kind === 'tab') {
     return {
-      primary: action<Item>({ id: 'activate', title: 'Activate', icon: ArrowRight, do: (i) => searchApi.activateTab(i.id) }),
+      primary: action<Item>({
+        id: 'activate',
+        title: 'Activate',
+        icon: ArrowRight,
+        do: (i) => searchApi.activateTab(i.id),
+      }),
       secondary: [
-        action<Item>({ id: 'close', title: 'Close Tab', icon: X, shortcut: { mod: true, key: 'Backspace' },
-          do: (i) => searchApi.closeTab(i.id), after: 'stay' }),
+        action<Item>({
+          id: 'close',
+          title: 'Close Tab',
+          icon: X,
+          shortcut: { mod: true, key: 'Backspace' },
+          do: (i) => searchApi.closeTab(i.id),
+          after: 'stay',
+        }),
         copyUrl,
-        action<Item>({ id: 'duplicate', title: 'Duplicate Tab', icon: Copy, do: (i) => searchApi.duplicateTab(i.id), after: 'stay' })
-      ]
+        action<Item>({
+          id: 'duplicate',
+          title: 'Duplicate Tab',
+          icon: Copy,
+          do: (i) => searchApi.duplicateTab(i.id),
+          after: 'stay',
+        }),
+      ],
     };
   }
   return {
-    primary: action<Item>({ id: 'open', title: 'Open in New Tab', icon: ArrowRight, do: (i) => searchApi.openUrl(i.url) }),
-    secondary: [copyUrl]
+    primary: action<Item>({
+      id: 'open',
+      title: 'Open in New Tab',
+      icon: ArrowRight,
+      do: (i) => searchApi.openUrl(i.url),
+    }),
+    secondary: [copyUrl],
   };
 }
 ```
@@ -468,21 +553,31 @@ handlers trimmed; the module owns the `{#each}` and its own data pipeline):
   import type { Item, SourceToggles } from './parsers';
 
   let items = $state<Item[]>([]);
-  let enabled = $state<SourceToggles>({ tab: true, bookmark: false, history: false });
+  let enabled = $state<SourceToggles>({
+    tab: true,
+    bookmark: false,
+    history: false,
+  });
   let query = $state('');
   let reqSeq = 0;
 
-  onMount(() => { void searchApi.prepare(); });   // refresh the bg cache on entry (was store.open())
+  onMount(() => {
+    void searchApi.prepare();
+  }); // refresh the bg cache on entry (was store.open())
 
   async function runQuery(q: string) {
     const id = ++reqSeq;
-    const clean = $state.snapshot(enabled);        // snapshot before it crosses IPC, or clone throws
+    const clean = $state.snapshot(enabled); // snapshot before it crosses IPC, or clone throws
     const { reqId, items: next } = await searchApi.query(q, clean, id);
-    if (reqId === reqSeq) items = next;            // drop stale responses
+    if (reqId === reqSeq) items = next; // drop stale responses
   }
 </script>
 
-<List bind:query placeholder="Search tabs, bookmarks & history…" onSearchChange={runQuery}>
+<List
+  bind:query
+  placeholder="Search tabs, bookmarks & history…"
+  onSearchChange={runQuery}
+>
   {#snippet header()}<SourceIcons {enabled} … />{/snippet}
   {#each items as item (item.id)}
     <ListItem id={item.id} subject={item} actions={commandsForItem(item)}>
@@ -506,19 +601,21 @@ We checked the design against Raycast (terminology, file structure, command life
 We track its proven model closely; the divergences are deliberate.
 
 **Aligned:**
+
 - Raycast **Command** (entry point in root search) → our `Command` + `RootList`.
 - Raycast **view command** (renders a component, stays loaded until you go back to root)
   → our `{ kind: 'view' }` frame on the nav stack.
 - Raycast **no-view command** (`mode: no-view`: run async, show a HUD, unload) → our
-  `{ kind: 'perform', after: 'close' }`. Their `mode` field *is* our `run.kind`.
+  `{ kind: 'perform', after: 'close' }`. Their `mode` field _is_ our `run.kind`.
 - Raycast root search fuzzy-matches all commands → `RootList` with internal uFuzzy filter.
 
 That Raycast independently lands on the same view/no-view split is good evidence the core
 abstraction is right.
 
 **Deliberate divergences:**
+
 1. **Code registry, not a manifest.** Raycast declares commands in `package.json` so a
-   *store* can list/search them without loading code. We're one self-authored compiled
+   _store_ can list/search them without loading code. We're one self-authored compiled
    extension; a code `registry.ts` is simpler and loses nothing.
 2. **We unify `Command` + `Action`; Raycast separates them.** Raycast's Actions already
    span push-a-view (`<Action.Push>`) and run-a-fn (`onAction`) — the same duality as our
@@ -535,7 +632,11 @@ won't threaten the <150 ms open target, so **views load eagerly (`view: Componen
 do not build a lazy seam** until bundle size actually bites.
 
 **Borrowing:**
+
 - **Back navigation chrome** — Raycast's back arrow left of the search bar (decision 11).
 - **`Command` factories** — `action()`/`openView()` in `commands/factories.ts`, echoing
   Raycast's `<Action.*>`: the readable call-site without markup registration.
+
+```
+
 ```

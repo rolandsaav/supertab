@@ -14,8 +14,12 @@
     class="overlay"
     role="button"
     tabindex="0"
-    onclick={(e) => { if (e.target === e.currentTarget) nav.close(); }}
-    onkeydown={(e) => { if (e.key === 'Enter' && e.target === e.currentTarget) nav.close(); }}
+    onclick={(e) => {
+      if (e.target === e.currentTarget) nav.close();
+    }}
+    onkeydown={(e) => {
+      if (e.key === 'Enter' && e.target === e.currentTarget) nav.close();
+    }}
   >
     <div class="popup" role="dialog" aria-modal="true" tabindex="-1">
       <div class="body">
@@ -26,7 +30,10 @@
       {#if status.error}
         <div class="error">{status.error}</div>
       {/if}
-      <Footer primaryLabel={footer.primaryLabel} hasActions={footer.hasActions} />
+      <Footer
+        primaryLabel={footer.primaryLabel}
+        hasActions={footer.hasActions}
+      />
     </div>
   </div>
 {/if}

@@ -52,7 +52,10 @@ class Nav {
 
   push<T>(command: Command<T>): void {
     if (command.run.kind === 'view') {
-      this.stack = [...this.stack, { view: command.run.view, title: command.title }];
+      this.stack = [
+        ...this.stack,
+        { view: command.run.view, title: command.title },
+      ];
     }
   }
 

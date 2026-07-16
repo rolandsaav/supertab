@@ -10,9 +10,14 @@ export interface PaletteCommandMessage {
 }
 
 /** True when a message is one of our palette command envelopes. */
-export function isPaletteCommand(message: unknown): message is PaletteCommandMessage {
+export function isPaletteCommand(
+  message: unknown,
+): message is PaletteCommandMessage {
   const candidate = message as Partial<PaletteCommandMessage>;
-  return candidate?.type === 'supertab:command' && typeof candidate?.name === 'string';
+  return (
+    candidate?.type === 'supertab:command' &&
+    typeof candidate?.name === 'string'
+  );
 }
 
 /** Send one palette command to a tab. Rejections propagate to the caller. */

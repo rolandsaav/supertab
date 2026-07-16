@@ -11,7 +11,10 @@ function track(label: string, task: Promise<unknown>): void {
 
 /** Relay a palette command to the active tab; rejects on unreachable tabs (e.g. chrome://). */
 async function relayToActiveTab(name: string): Promise<void> {
-  const [active] = await browser.tabs.query({ currentWindow: true, active: true });
+  const [active] = await browser.tabs.query({
+    currentWindow: true,
+    active: true,
+  });
   if (active?.id !== undefined) {
     await sendPaletteCommand(active.id, name);
   }
@@ -23,7 +26,9 @@ browser.runtime.onStartup.addListener(() => track('seed', seed()));
 browser.runtime.onInstalled.addListener(() => track('seed', seed()));
 
 // Keep the visited set in step with real activity.
-browser.tabs.onActivated.addListener(({ tabId }) => track('markVisited', markVisited(tabId)));
+browser.tabs.onActivated.addListener(({ tabId }) =>
+  track('markVisited', markVisited(tabId)),
+);
 browser.tabs.onRemoved.addListener((tabId) => track('forget', forget(tabId)));
 
 // Command shortcuts fire only in the worker; forward the intent to the page, which owns the state.

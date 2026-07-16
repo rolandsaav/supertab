@@ -12,7 +12,9 @@
 
 <div class="footer">
   {#if primaryLabel}
-    <span class="hint hint-primary">{primaryLabel}<KeyCombo shortcut={PRIMARY_SHORTCUT} /></span>
+    <span class="hint hint-primary"
+      >{primaryLabel}<KeyCombo shortcut={PRIMARY_SHORTCUT} /></span
+    >
   {/if}
   {#if primaryLabel && hasActions}
     <span class="divider" aria-hidden="true"></span>

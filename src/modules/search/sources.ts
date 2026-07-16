@@ -15,7 +15,7 @@ interface SourceMeta {
 export const SOURCE_META: Record<Kind, SourceMeta> = {
   tab: { label: 'Tabs', icon: AppWindow, command: '@t' },
   bookmark: { label: 'Bookmarks', icon: Bookmark, command: '@b' },
-  history: { label: 'History', icon: History, command: '@h' }
+  history: { label: 'History', icon: History, command: '@h' },
 };
 
 /** Left-to-right display order of the source toggle icons — the declaration order
@@ -25,17 +25,20 @@ export const SOURCE_ORDER = Object.keys(SOURCE_META) as Kind[];
 /** The source a whole-input @-command enables, or null when the input is not one. */
 export function parseSourceCommand(input: string): Kind | null {
   const match = (Object.keys(SOURCE_META) as Kind[]).find(
-    (kind) => SOURCE_META[kind].command === input
+    (kind) => SOURCE_META[kind].command === input,
   );
   return match ?? null;
 }
 
-const listFormat = new Intl.ListFormat('en', { style: 'long', type: 'conjunction' });
+const listFormat = new Intl.ListFormat('en', {
+  style: 'long',
+  type: 'conjunction',
+});
 
 /** Input placeholder naming the enabled sources, e.g. "Search tabs and history…". */
 export function searchPlaceholder(enabled: SourceToggles): string {
   const names = SOURCE_ORDER.filter((kind) => enabled[kind]).map((kind) =>
-    SOURCE_META[kind].label.toLowerCase()
+    SOURCE_META[kind].label.toLowerCase(),
   );
   return `Search ${listFormat.format(names)}…`;
 }

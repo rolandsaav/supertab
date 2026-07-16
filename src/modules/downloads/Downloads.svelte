@@ -38,7 +38,12 @@
   }
 </script>
 
-<List bind:query placeholder="Search downloads…" onSearchChange={(v) => void runQuery(v)} onRefresh={refresh}>
+<List
+  bind:query
+  placeholder="Search downloads…"
+  onSearchChange={(v) => void runQuery(v)}
+  onRefresh={refresh}
+>
   {#each items as item (item.id)}
     <ListItem id={item.id} subject={item} actions={commandsForDownload(item)}>
       <DownloadRow {item} />

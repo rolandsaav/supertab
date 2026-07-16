@@ -1,8 +1,8 @@
 # Modules — how they work & how to add one
 
 **Audience:** anyone extending SuperTab with a new capability.
-**Companion:** `docs/modular-foundation.md` explains *why* the architecture is shaped
-this way (the design and its decisions). This document is the *how-to* — the concrete
+**Companion:** `docs/modular-foundation.md` explains _why_ the architecture is shaped
+this way (the design and its decisions). This document is the _how-to_ — the concrete
 steps, files, and wiring to add a module. When the two disagree, the code wins; tell us so
 we can fix the doc.
 
@@ -15,7 +15,7 @@ tab-groups, manage-extensions. It's a **convention, not a type**: a folder under
 shared abstractions:
 
 - **`Command<T>`** (`src/commands/command.ts`) — anything invocable: a root-list entry that
-  opens a view or performs a one-shot, *and* the per-item actions inside a view. The only
+  opens a view or performs a one-shot, _and_ the per-item actions inside a view. The only
   difference is the subject `T` (`void` for root commands, e.g. `Item` for an action on the
   highlighted row).
 - **`View`** (`src/shell/view.ts`) — just a Svelte component (`type View = Component`). No
@@ -43,12 +43,12 @@ content:    searchApi.query(...)   ──IPC──▶   background:  handlers.qu
 
 Two rules make the seam safe:
 
-1. **`api.ts` imports only the *type* of its shapes** (`import type { Item } from './parsers'`),
+1. **`api.ts` imports only the _type_ of its shapes** (`import type { Item } from './parsers'`),
    so `browser.*`/cache code never leaks into the content bundle.
 2. **Snapshot reactive values before they cross IPC** — `$state.snapshot(x)` — or the
    structured clone throws. See `Search.svelte`'s `runQuery`.
 
-A `perform` always runs in the content context; it *calls into* the api when it needs the
+A `perform` always runs in the content context; it _calls into_ the api when it needs the
 background. So "Copy URL" is content-only (no api call) while "Close Tab" calls
 `searchApi.closeTab(...)`. The boundary is the operation, not the command.
 
@@ -57,14 +57,14 @@ background. So "Copy URL" is content-only (no api call) while "Close Tab" calls
 Every file below is optional except `commands.ts` (a module with no UI and no background is
 just a launch command). `src/modules/search/` is the worked example:
 
-| File | Role | Context |
-|---|---|---|
-| `module.ts` | the identity string `MODULE` — the RPC namespace *and* the root-command id, in one place so the two halves can't drift | shared |
-| `commands.ts` | the launch `Command` + the per-item `RowActions` (built with the `action()`/`openView()` factories) | content |
-| `<Name>.svelte` | the `View` — composes the list primitives, owns its own data pipeline | content |
-| `api.ts` | the privileged interface + `defineProxy<Api>(MODULE)` client | content |
-| `background.ts` | implements the interface, owns background state, calls `registerModule(MODULE, handlers)` | background |
-| supporting files | row markup (`ItemRow.svelte`), domain logic (`search.ts`, `ranking.ts`, `parsers.ts`, `providers.ts`), presentation metadata (`sources.ts`) | as needed |
+| File             | Role                                                                                                                                        | Context    |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `module.ts`      | the identity string `MODULE` — the RPC namespace _and_ the root-command id, in one place so the two halves can't drift                      | shared     |
+| `commands.ts`    | the launch `Command` + the per-item `RowActions` (built with the `action()`/`openView()` factories)                                         | content    |
+| `<Name>.svelte`  | the `View` — composes the list primitives, owns its own data pipeline                                                                       | content    |
+| `api.ts`         | the privileged interface + `defineProxy<Api>(MODULE)` client                                                                                | content    |
+| `background.ts`  | implements the interface, owns background state, calls `registerModule(MODULE, handlers)`                                                   | background |
+| supporting files | row markup (`ItemRow.svelte`), domain logic (`search.ts`, `ranking.ts`, `parsers.ts`, `providers.ts`), presentation metadata (`sources.ts`) | as needed  |
 
 The list primitives under `src/shell/list/` (`List`, `ListItem`, `context.ts`) are a
 convenience for list-shaped views — they give you the input, keyboard nav, back button,
@@ -121,8 +121,12 @@ import type { UnloadApi } from './api';
 import { MODULE } from './module';
 
 const handlers: UnloadApi = {
-  async listTabs() { /* browser.tabs.query(...) */ },
-  async unload(id) { await browser.tabs.discard(Number(id)); }
+  async listTabs() {
+    /* browser.tabs.query(...) */
+  },
+  async unload(id) {
+    await browser.tabs.discard(Number(id));
+  },
 };
 
 registerModule(MODULE, handlers);
@@ -154,12 +158,12 @@ export const unloadCommand = openView({
   title: 'Unload Tabs',
   icon: MoonIcon,
   keywords: ['discard', 'memory', 'suspend'],
-  view: Unload
+  view: Unload,
 });
 ```
 
 For a **one-shot module (shape A)**, `openView` becomes an `action` and you skip the view
-entirely — the launch command *is* the effect.
+entirely — the launch command _is_ the effect.
 
 Per-row actions return a `RowActions<T>` (`{ primary, secondary? }`) — a required `primary`
 runs on Enter, `secondary[]` fill the actions panel. See `commandsForItem` in
@@ -241,16 +245,21 @@ import { MODULE } from './module';
 
 const handlers: CloseOthersApi = {
   async closeOthers() {
-    const tabs = await browser.tabs.query({ currentWindow: true, active: false });
-    const ids = tabs.map((tab) => tab.id).filter((id): id is number => id !== undefined);
+    const tabs = await browser.tabs.query({
+      currentWindow: true,
+      active: false,
+    });
+    const ids = tabs
+      .map((tab) => tab.id)
+      .filter((id): id is number => id !== undefined);
     await browser.tabs.remove(ids);
-  }
+  },
 };
 
 registerModule(MODULE, handlers);
 ```
 
-**`src/modules/close-others/commands.ts`** — the launch command *is* the effect (no view):
+**`src/modules/close-others/commands.ts`** — the launch command _is_ the effect (no view):
 
 ```ts
 import XCircle from '@lucide/svelte/icons/circle-x';
@@ -264,7 +273,7 @@ export const closeOthersCommand = action<void>({
   title: 'Close Other Tabs',
   icon: XCircle,
   keywords: ['tabs', 'clean', 'declutter'],
-  do: () => closeOthersApi.closeOthers()
+  do: () => closeOthersApi.closeOthers(),
   // after defaults to 'close'
 });
 ```

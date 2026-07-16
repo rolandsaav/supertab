@@ -19,7 +19,8 @@ function cleanUrl(raw: string): string {
 }
 
 /** The text a query is matched against — single home for searchable fields. */
-const searchableText = (item: Item): string => `${item.title} ${cleanUrl(item.url)}`;
+const searchableText = (item: Item): string =>
+  `${item.title} ${cleanUrl(item.url)}`;
 
 /** Unfiltered order: pinned tabs float to the top, ties broken by most recently accessed. */
 function pinnedThenRecent(a: Item, b: Item): number {

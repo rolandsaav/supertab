@@ -6,6 +6,7 @@
 > **Reconciliation note (post-implementation).** This plan is a historical artifact, written
 > before two things settled. Read it with these corrections; the authoritative file/symbol
 > names live in `docs/modules.md` and `docs/modular-foundation.md`.
+>
 > 1. **`ListView` → `shell/list/` primitives.** The planned single `ListView` god-component
 >    (a `components/ListView.svelte` configured by `items`/`getId`/`commands` props) shipped
 >    instead as composable primitives: `List.svelte` (chrome + input) and `ListItem.svelte`
@@ -37,7 +38,8 @@ rewrite ranking or fetching.
 ---
 
 ## Phase 0: Contracts & Interfaces
-*Types and signatures only — no implementation bodies. This is the seam everything else builds against.*
+
+_Types and signatures only — no implementation bodies. This is the seam everything else builds against._
 
 - [ ] `bridge/rpc.ts` (shared + content):
   - `interface RpcRequest { module: string; op: string; args: unknown[] }`
@@ -53,28 +55,30 @@ rewrite ranking or fetching.
   - `Shortcut` type moved here from `actions/registry.ts`.
 - [ ] `shell/view.ts`: `type View = Component` (prop-free — decision 7).
 - [ ] `shell/nav.svelte.ts`: `interface Frame { view: View; title: string }`; `Nav` API —
-  `visible`, `stack`, `current`, `canPop`, `open(target?, { keepRoot=true })`, `push(command)`,
-  `pop()`, `close()` (decisions 1, 5).
+      `visible`, `stack`, `current`, `canPop`, `open(target?, { keepRoot=true })`, `push(command)`,
+      `pop()`, `close()` (decisions 1, 5).
 - [ ] `modules/search/api.ts`: `interface SearchApi` (`prepare`, `query`, `activateTab`,
-  `closeTab`, `duplicateTab`, `openUrl`) + `export const searchApi = defineProxy<SearchApi>('search')`.
+      `closeTab`, `duplicateTab`, `openUrl`) + `export const searchApi = defineProxy<SearchApi>('search')`.
 - [ ] `shell/list/` primitive prop contracts (types only). `List.svelte`: `placeholder`,
-  `isLoading?`, `query?` (bindable), `header?`, `onSearchChange?`, `onRefresh?`, `children`.
-  `ListItem.svelte<T>`: `id`, `actions: RowActions<T>`, `subject?`, `children`. The module
-  owns the `{#each}`; each `ListItem` registers its actions through `list/context.ts`.
-  *(Planned as one `components/ListView.svelte` — see the reconciliation note.)*
+      `isLoading?`, `query?` (bindable), `header?`, `onSearchChange?`, `onRefresh?`, `children`.
+      `ListItem.svelte<T>`: `id`, `actions: RowActions<T>`, `subject?`, `children`. The module
+      owns the `{#each}`; each `ListItem` registers its actions through `list/context.ts`.
+      _(Planned as one `components/ListView.svelte` — see the reconciliation note.)_
 
 **✓ Checkpoint:**
+
 - [ ] `npm run check` passes with the new type files present and referenced by stub imports.
 - [ ] Every design-doc symbol has a home; no `Action` type survives (unified into `Command<T>` — decision 8).
 
 ---
 
 ## Phase 1: Tracer Bullet — hotkey → root → push search → query over RPC → run primary command
-*Goal: prove the whole architecture end-to-end with the thinnest real implementation of every layer.*
-*Resolves the two biggest unknowns at once: (a) the hand-rolled Proxy/dispatcher round-trips over MV3 IPC, including registration on worker wake; (b) the nav stack renders a dynamic `View` inside the shadow root and runs a `CommandRun`.*
+
+_Goal: prove the whole architecture end-to-end with the thinnest real implementation of every layer._
+_Resolves the two biggest unknowns at once: (a) the hand-rolled Proxy/dispatcher round-trips over MV3 IPC, including registration on worker wake; (b) the nav stack renders a dynamic `View` inside the shadow root and runs a `CommandRun`._
 
 - [ ] `bridge/rpc.ts` + `rpc-background.ts` implemented (Proxy, `call`, dispatcher, registry).
-  - Done when: a temporary `ping` handler registered in background returns a value to a content-side proxy call, and a call made *after* the service worker is force-idled still succeeds (registration re-ran on wake).
+  - Done when: a temporary `ping` handler registered in background returns a value to a content-side proxy call, and a call made _after_ the service worker is force-idled still succeeds (registration re-ran on wake).
 - [ ] `modules/search/background.ts`: move the search `cache` + `fillPool` out of `background.ts`; implement `SearchApi` handlers by calling existing `search()`/`SOURCES`/`browser.tabs.*`; `registerModule('search', …)`. Keep the old `handle` switch untouched for now.
   - Done when: both listeners coexist; the old palette still works and the new `searchApi.query(...)` returns ranked items.
 - [ ] `shell/nav.svelte.ts` implemented; `shell/Shell.svelte` renders `nav.current.view` dynamically inside the overlay/popup (lift the shadow-DOM overlay markup from `App.svelte`).
@@ -85,6 +89,7 @@ rewrite ranking or fetching.
   - Done when: F1 opens the **search view directly**; typing returns tab results **via the new RPC path**; Enter on a tab activates it and the palette closes; Escape from search backs out to the root list showing "Search".
 
 **✓ Checkpoint — confirm before Phase 2:**
+
 - [ ] Full path works in-browser: F1 → search → type → results → Enter activates tab → closes; Escape from search → root list.
 - [ ] Query and activate both round-trip through `bridge/rpc.ts` (verified: old `SEARCH`/`ACTIVATE_TAB` cases are not hit on this path).
 - [ ] New dispatcher ignores old `Request` messages; old palette path (if still mounted anywhere) is unaffected.
@@ -94,7 +99,8 @@ rewrite ranking or fetching.
 ---
 
 ## Phase 2: Complete the list primitives
-*Goal: bring the `shell/list/` primitives to parity with today's palette so search loses nothing. Refine against tracer results before starting.*
+
+_Goal: bring the `shell/list/` primitives to parity with today's palette so search loses nothing. Refine against tracer results before starting._
 
 - [ ] Actions panel overlay (right-click / shortcut), listing `commands(item)`; shortcut matching via `matchesShortcut` (reuse `utils.svelte.ts`). Folds in old `ActionsPanel` (decision 3).
 - [ ] `perform`+`after: 'stay'` → `onRefresh?.()` (decision B).
@@ -104,13 +110,15 @@ rewrite ranking or fetching.
 - [ ] Keyboard nav parity: loop, vim keys, `tabNav` (reuse `utils.svelte.ts`).
 
 **✓ Checkpoint:**
+
 - [ ] Actions panel, back button, footer, and fuzzy root filtering all work; `after: 'stay'` refreshes without closing.
 - [ ] Reuses `utils.svelte.ts`, the generic uFuzzy `order()` (`lib/fuzzy.ts`), and `Footer.svelte` rather than re-implementing.
 
 ---
 
 ## Phase 3: Complete the search module
-*Goal: full feature parity with the current search experience, now fully on the new foundation.*
+
+_Goal: full feature parity with the current search experience, now fully on the new foundation._
 
 - [ ] Full `commandsForItem`: bookmark/history `open` + `copyUrl`; tab `duplicate` + `copyUrl`; `copyUrl` stays content-side (`navigator.clipboard`) — verifies the actions-vs-operations boundary.
 - [ ] Source toggles + `@t/@b/@h` commands + placeholder via the `header` snippet; reuse `SOURCE_META`/`parseSourceCommand`/`searchPlaceholder` and `SourceIcons.svelte` (moved into `modules/search/`).
@@ -118,12 +126,14 @@ rewrite ranking or fetching.
 - Search-specific UI (`sources.ts`, `SourceIcons.svelte`) is reused **in place** from `ui/` for now; the physical relocation is deferred to Phase 4's rename sweep, so the still-present legacy files that import them don't break and nothing is duplicated.
 
 **✓ Checkpoint:**
+
 - [ ] Search module matches the pre-refactor palette feature-for-feature (toggles, @-commands, badge, all per-item actions, errors).
 
 ---
 
 ## Phase 4: Retire old code & finalize
-*Goal: remove the parallel old path and the scaffolding it required.*
+
+_Goal: remove the parallel old path and the scaffolding it required._
 
 - [ ] Delete `bridge/messages.ts`, `bridge/background-bridge.ts`, the `handle` switch, `actions/registry.ts`, `ui/App.svelte`, `ui/CommandPalette.svelte`, `ui/ActionsPanel.svelte`, and `PaletteStore`.
   - Deleting `actions/registry.ts` orphans the `Shortcut` type it defines — **repoint** `ui/utils.svelte.ts` and `ui/KeyCombo.svelte` to import `Shortcut` from `commands/command.ts` (which is now its authoritative home; the two definitions are duplicated during migration).
@@ -134,6 +144,7 @@ rewrite ranking or fetching.
 - [ ] Build both targets (`npm run build`, `npm run build:firefox`); `npm run check` clean.
 
 **✓ Checkpoint:**
+
 - [ ] No references to deleted files remain; dispatcher no longer needs the `module`-field guard (old listener is gone).
 - [ ] Both browser builds succeed; type-check the **committed** tree, not just the working tree.
 - [ ] Manual daily-drive pass: open latency still feels < 150 ms.
@@ -141,6 +152,7 @@ rewrite ranking or fetching.
 ---
 
 ## Deferred
+
 - **Shared `tabs` ops module** — deferred until a second consumer (Unload Tabs / Tab Groups) exists; extract then (rule of three, design doc "Deferred").
 - **Footer API for non-list modules** — deferred until a non-list module exists; `List` fills the footer for now (decision 3).
 - **Lazy-loaded module views** — deferred until bundle size threatens the <150 ms open target; views load eagerly (design doc "Compared to Raycast").
@@ -148,5 +160,6 @@ rewrite ranking or fetching.
 - **`@webext-core/messaging`** — only if maintaining the hand-rolled RPC ever chafes (decision 12).
 
 ## Notes on reversibility
+
 - The **`content.ts` → Shell switch** (Phase 1) is the one integration point that can break the extension globally (shadow DOM, hotkey containment, key event `stopPropagation`). Keep `App.svelte` mountable until Phase 4 so reverting is a one-line change.
 - Everything deleted in Phase 4 is recoverable via git; do it only after the Phase 3 checkpoint proves parity.
