@@ -11,7 +11,9 @@ function track(label: string, task: Promise<unknown>): void {
 /** Relay a palette command to the active tab; rejects on unreachable tabs (e.g. chrome://). */
 async function relayToActiveTab(name: string): Promise<void> {
   const [active] = await browser.tabs.query({ currentWindow: true, active: true });
-  if (active?.id !== undefined) await sendPaletteCommand(active.id, name);
+  if (active?.id !== undefined) {
+    await sendPaletteCommand(active.id, name);
+  }
 }
 
 // Seed the visited set once per session so pre-existing tabs don't flag as
@@ -29,5 +31,12 @@ browser.commands.onCommand.addListener((name) => {
     case TOGGLE_PALETTE:
       track('toggle-palette', relayToActiveTab(name));
       break;
+  }
+});
+
+// Clicking the toolbar icon is a second trigger for the same toggle intent.
+browser.action.onClicked.addListener((tab) => {
+  if (tab.id !== undefined) {
+    track('toggle-palette', sendPaletteCommand(tab.id, TOGGLE_PALETTE));
   }
 });

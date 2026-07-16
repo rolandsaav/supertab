@@ -16,6 +16,9 @@
       "description": "Toggle the SuperTab palette"
     }
   },
+  "action": {
+    "default_title": "Toggle SuperTab"
+  },
   "background": {
     "scripts": ["background.js"]
   },

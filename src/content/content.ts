@@ -53,7 +53,9 @@ function init(): void {
 
 // Toggle intent from the background; the page owns the state and decides open-vs-close.
 browser.runtime.onMessage.addListener((message: unknown) => {
-  if (!isPaletteCommand(message) || message.name !== TOGGLE_PALETTE) return;
+  if (!isPaletteCommand(message) || message.name !== TOGGLE_PALETTE) {
+    return;
+  }
   if (nav.visible) {
     nav.close();
   } else {
