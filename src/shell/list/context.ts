@@ -1,4 +1,4 @@
-import { getContext } from 'svelte';
+import { createContext } from 'svelte';
 import type { Command } from '../../commands/command';
 
 /**
@@ -25,11 +25,8 @@ export interface ListContext {
   openActions(id: string): void;
 }
 
-export const LIST_KEY = Symbol('list');
-
-export function getListContext(): ListContext {
-  return getContext(LIST_KEY);
-}
+/** The List↔ListItem seam: `List` sets it, each `ListItem` gets it. */
+export const [getListContext, setListContext] = createContext<ListContext>();
 
 /** A row's actions flattened, primary first — for the panel and shortcut matching. */
 export function allActions(actions: RowActions): Command<any>[] {

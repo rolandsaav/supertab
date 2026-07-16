@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { setContext, type Snippet } from 'svelte';
+  import type { Snippet } from 'svelte';
   import { SvelteMap } from 'svelte/reactivity';
   import { Command } from 'bits-ui';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
@@ -9,7 +9,7 @@
   import { autofocus, tabNav, matchAction, matchesShortcut, OPEN_ACTIONS_SHORTCUT } from '../../components/utils.svelte';
   import ActionsPanel from '../../components/ActionsPanel.svelte';
   import { runCommand } from './run';
-  import { LIST_KEY, allActions, hasSecondaryActions, type ListContext, type ItemEntry } from './context';
+  import { setListContext, allActions, hasSecondaryActions, type ItemEntry } from './context';
 
   interface Props {
     placeholder: string;
@@ -80,7 +80,7 @@
     if (entry) void runCommand(command, entry.subject, onRefresh);
   }
 
-  setContext<ListContext>(LIST_KEY, {
+  setListContext({
     register: (id, entry) => registry.set(id, entry),
     unregister: (id) => registry.delete(id),
     select: (id) => {
