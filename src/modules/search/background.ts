@@ -49,8 +49,23 @@ const handlers: SearchApi = {
     await browser.tabs.remove(toTabId(id));
   },
   duplicateTab,
+  async muteTab(id, muted) {
+    await browser.tabs.update(toTabId(id), { muted });
+  },
+  async reloadTab(id) {
+    await browser.tabs.reload(toTabId(id));
+  },
+  async pinTab(id, pinned) {
+    await browser.tabs.update(toTabId(id), { pinned });
+  },
   async openUrl(url) {
     await browser.tabs.create({ url });
+  },
+  async openUrlInCurrentTab(url) {
+    const [active] = await browser.tabs.query({ currentWindow: true, active: true });
+    if (active?.id != null) {
+      await browser.tabs.update(active.id, { url });
+    }
   }
 };
 
