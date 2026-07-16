@@ -14,6 +14,10 @@ export interface Item {
   lastAccessed: number;
   /** Only meaningful for tabs — whether it's been activated this session. */
   visited: boolean;
+  /** Tab-only state, always false for bookmarks and history. */
+  muted: boolean;
+  audible: boolean;
+  pinned: boolean;
 }
 
 export function parseTab(tab: Tabs.Tab, index: number): Item {
@@ -24,7 +28,10 @@ export function parseTab(tab: Tabs.Tab, index: number): Item {
     url: tab.url || '',
     favIconUrl: tab.favIconUrl || '',
     lastAccessed: tab.lastAccessed ?? 0,
-    visited: false
+    visited: false,
+    muted: tab.mutedInfo?.muted ?? false,
+    audible: tab.audible ?? false,
+    pinned: tab.pinned ?? false
   };
 }
 
@@ -36,7 +43,10 @@ export function parseBookmark(node: Bookmarks.BookmarkTreeNode): Item {
     url: node.url || '',
     favIconUrl: '',
     lastAccessed: node.dateAdded ?? 0,
-    visited: false
+    visited: false,
+    muted: false,
+    audible: false,
+    pinned: false
   };
 }
 
@@ -48,6 +58,9 @@ export function parseHistory(item: History.HistoryItem): Item {
     url: item.url || '',
     favIconUrl: '',
     lastAccessed: item.lastVisitTime ?? 0,
-    visited: false
+    visited: false,
+    muted: false,
+    audible: false,
+    pinned: false
   };
 }

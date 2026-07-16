@@ -277,6 +277,12 @@
   background: var(--st-text-muted);
 }
 
+/* Trailing tab-state icons (pinned, muted, playing audio). */
+.indicator {
+  flex-shrink: 0;
+  color: var(--st-text-muted);
+}
+
 .title {
   color: var(--st-text);
   font-size: 0.875em;
