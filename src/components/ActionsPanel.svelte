@@ -1,7 +1,7 @@
 <script lang="ts" generics="T">
   import { Command } from 'bits-ui';
   import type { Command as PaletteCommand } from '../commands/command';
-  import { autofocus, matchAction } from './utils.svelte';
+  import { autofocus, matchAction, tabNav } from './utils.svelte';
   import KeyCombo from './KeyCombo.svelte';
 
   interface Props {
@@ -13,6 +13,7 @@
 
   let query = $state('');
   let inputRef = $state<HTMLInputElement | null>(null);
+  let commandRoot = $state<ReturnType<typeof Command.Root> | null>(null);
 
   autofocus(() => inputRef);
 
@@ -21,11 +22,13 @@
     if (match) {
       e.preventDefault();
       onRun(match);
+      return;
     }
+    tabNav(e, commandRoot);
   }
 </script>
 
-<Command.Root loop onkeydown={onKeydown} class="actions">
+<Command.Root bind:this={commandRoot} loop onkeydown={onKeydown} class="actions">
   <Command.List class="actions-list">
     <Command.Empty class="empty">No actions</Command.Empty>
     {#each actions as action (action.id)}
