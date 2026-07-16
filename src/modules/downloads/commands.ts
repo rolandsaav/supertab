@@ -16,20 +16,27 @@ export const downloadsCommand = openView({
   title: 'Search Downloads',
   icon: DownloadIcon,
   keywords: ['downloads', 'files', 'saved'],
-  view: Downloads
+  view: Downloads,
 });
 
 /** A result's actions — the primary runs on Enter, the secondaries fill the panel. */
-export function commandsForDownload(entry: DownloadEntry): RowActions<DownloadEntry> {
+export function commandsForDownload(
+  _entry: DownloadEntry,
+): RowActions<DownloadEntry> {
   return {
-    primary: action<DownloadEntry>({ id: 'open-file', title: 'Open File', icon: ArrowRight, do: (d) => downloadsApi.openFile(d.id) }),
+    primary: action<DownloadEntry>({
+      id: 'open-file',
+      title: 'Open File',
+      icon: ArrowRight,
+      do: (d) => downloadsApi.openFile(d.id),
+    }),
     secondary: [
       action<DownloadEntry>({
         id: 'show-in-folder',
         title: 'Show in Folder',
         icon: FolderOpen,
         do: (d) => downloadsApi.showFile(d.id),
-        after: 'stay'
+        after: 'stay',
       }),
       action<DownloadEntry>({
         id: 'copy-url',
@@ -37,9 +44,14 @@ export function commandsForDownload(entry: DownloadEntry): RowActions<DownloadEn
         icon: Link,
         shortcut: { mod: true, key: 'c' },
         do: (d) => navigator.clipboard.writeText(d.url),
-        after: 'stay'
+        after: 'stay',
       }),
-      action<DownloadEntry>({ id: 'open-url', title: 'Open Source URL', icon: ExternalLink, do: (d) => downloadsApi.openUrl(d.url) })
-    ]
+      action<DownloadEntry>({
+        id: 'open-url',
+        title: 'Open Source URL',
+        icon: ExternalLink,
+        do: (d) => downloadsApi.openUrl(d.url),
+      }),
+    ],
   };
 }

@@ -1,0 +1,6 @@
+# Revisions listed here are skipped by `git blame` (bulk formatting, no
+# authorship value). Enable locally with:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# style: format entire codebase with Prettier
+dc075dba0599d1db09245922a07ffd2ab75b32f3

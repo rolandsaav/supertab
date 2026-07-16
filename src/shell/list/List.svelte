@@ -6,10 +6,21 @@
   import type { Command as PaletteCommand } from '../../commands/command';
   import { nav } from '../nav.svelte';
   import { footer } from '../footer.svelte';
-  import { autofocus, tabNav, matchAction, matchesShortcut, OPEN_ACTIONS_SHORTCUT } from '../../components/utils.svelte';
+  import {
+    autofocus,
+    tabNav,
+    matchAction,
+    matchesShortcut,
+    OPEN_ACTIONS_SHORTCUT,
+  } from '../../components/utils.svelte';
   import ActionsPanel from '../../components/ActionsPanel.svelte';
   import { runCommand } from './run';
-  import { setListContext, allActions, hasSecondaryActions, type ItemEntry } from './context';
+  import {
+    setListContext,
+    allActions,
+    hasSecondaryActions,
+    type ItemEntry,
+  } from './context';
 
   interface Props {
     placeholder: string;
@@ -30,7 +41,7 @@
     header,
     onSearchChange,
     onRefresh,
-    children
+    children,
   }: Props = $props();
 
   const registry = new SvelteMap<string, ItemEntry>();
@@ -41,10 +52,15 @@
   let actionTargetId = $state('');
 
   // Refocus the main input when the actions panel is closed.
-  autofocus(() => inputRef, () => !actionsOpen);
+  autofocus(
+    () => inputRef,
+    () => !actionsOpen,
+  );
 
   const highlightedEntry = $derived(registry.get(highlightedId));
-  const panelEntry = $derived(actionsOpen ? registry.get(actionTargetId) : undefined);
+  const panelEntry = $derived(
+    actionsOpen ? registry.get(actionTargetId) : undefined,
+  );
 
   // Keep the shell footer showing the highlighted row's primary action.
   $effect(() => {
@@ -74,6 +90,7 @@
     actionsOpen = false;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- panel commands act on heterogeneous subjects
   function runFromPanel(command: PaletteCommand<any>): void {
     const entry = registry.get(actionTargetId);
     closeActions();
@@ -85,9 +102,10 @@
     unregister: (id) => registry.delete(id),
     select: (id) => {
       const entry = registry.get(id);
-      if (entry) void runCommand(entry.actions.primary, entry.subject, onRefresh);
+      if (entry)
+        void runCommand(entry.actions.primary, entry.subject, onRefresh);
     },
-    openActions
+    openActions,
   });
 
   function onInput(value: string): void {
@@ -128,7 +146,12 @@
 
   <div class="input-row">
     {#if nav.canPop}
-      <button type="button" class="back" aria-label="Back" onclick={() => nav.pop()}>
+      <button
+        type="button"
+        class="back"
+        aria-label="Back"
+        onclick={() => nav.pop()}
+      >
         <ArrowLeft size={18} />
       </button>
     {/if}

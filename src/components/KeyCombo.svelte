@@ -10,6 +10,6 @@
   let { shortcut }: Props = $props();
 </script>
 
-{#each shortcutParts(shortcut) as part}
+{#each shortcutParts(shortcut) as part (part)}
   <Key label={part} />
 {/each}

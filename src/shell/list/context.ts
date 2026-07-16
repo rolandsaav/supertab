@@ -6,6 +6,7 @@ import type { Command } from '../../commands/command';
  * (which fill the actions panel). Making the primary a required field is what keeps a
  * row from ever being actionless — no positional `[0]` convention to uphold.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic default: a row may hold any subject type
 export interface RowActions<T = any> {
   primary: Command<T>;
   secondary?: Command<T>[];
@@ -29,8 +30,11 @@ export interface ListContext {
 export const [getListContext, setListContext] = createContext<ListContext>();
 
 /** A row's actions flattened, primary first — for the panel and shortcut matching. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- subjects are heterogeneous across rows
 export function allActions(actions: RowActions): Command<any>[] {
-  return actions.secondary?.length ? [actions.primary, ...actions.secondary] : [actions.primary];
+  return actions.secondary?.length
+    ? [actions.primary, ...actions.secondary]
+    : [actions.primary];
 }
 
 /** Whether a row carries actions beyond the primary — the single threshold for
