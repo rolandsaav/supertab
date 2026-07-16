@@ -10,6 +10,14 @@
   },
   "permissions": ["tabs", "storage", "bookmarks", "history"],
   "host_permissions": ["<all_urls>"],
+  "commands": {
+    "toggle-palette": {
+      "description": "Toggle the SuperTab palette"
+    }
+  },
+  "action": {
+    "default_title": "Toggle SuperTab"
+  },
   "background": {
     "service_worker": "background.js"
   },

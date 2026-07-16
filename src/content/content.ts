@@ -1,11 +1,10 @@
+import browser from 'webextension-polyfill';
 import { mountApp } from './mount';
 import { nav } from '../shell/nav.svelte';
 import { searchCommand } from '../modules/search/commands';
+import { TOGGLE_PALETTE, isPaletteCommand } from '../bridge/commands';
 
 const HOST_ID = 'supertab-host';
-
-/** Key that toggles the palette open/closed. */
-const OPEN_KEY = 'F1';
 
 console.log('[SuperTab] Content script loaded');
 
@@ -17,7 +16,7 @@ function init(): void {
   }
 
   try {
-    // 1. Create isolated host node
+    // Isolated host node.
     const host = document.createElement('div');
     host.id = HOST_ID;
     host.style.all = 'initial';
@@ -30,11 +29,10 @@ function init(): void {
     document.body.appendChild(host);
     console.log('[SuperTab] Host created');
 
-    // 2. Attach open Shadow Root
     const shadow = host.attachShadow({ mode: 'open' });
     console.log('[SuperTab] Shadow root attached');
 
-    // 3. Mount Svelte app (styles are injected into the shadow root by mountApp)
+    // mountApp injects the styles into the shadow root.
     mountApp(shadow);
     console.log('[SuperTab] App mounted');
 
@@ -45,30 +43,28 @@ function init(): void {
       shadow.addEventListener(type, containKey);
     }
 
-    // 4. Global hotkey listener — capture phase so we intercept before
-    //    the browser handles keys on focused elements (e.g. Escape on input).
+    // Capture phase, to beat the browser's own key handling on focused elements.
     document.addEventListener('keydown', handleKeyDown, true);
-    console.log('[SuperTab] Hotkey listener attached');
+    console.log('[SuperTab] Escape listener attached');
   } catch (err) {
     console.error('[SuperTab] Init failed:', err);
   }
 }
 
-// Toggle palette visibility on hotkey.
-function handleKeyDown(e: KeyboardEvent): void {
-  // <OPEN_KEY> toggles the palette: open straight into search when closed, close when open.
-  if (e.key === OPEN_KEY) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (nav.visible) {
-      nav.close();
-    } else {
-      nav.open(searchCommand);
-    }
+// Toggle intent from the background; the page owns the state and decides open-vs-close.
+browser.runtime.onMessage.addListener((message: unknown) => {
+  if (!isPaletteCommand(message) || message.name !== TOGGLE_PALETTE) {
     return;
   }
+  if (nav.visible) {
+    nav.close();
+  } else {
+    nav.open(searchCommand);
+  }
+});
 
-  // While open, Escape steps back: an open popover first, then one view; past root closes.
+// While open, Escape steps back: an open popover first, then one view; past root closes.
+function handleKeyDown(e: KeyboardEvent): void {
   if (nav.visible && e.key === 'Escape') {
     e.preventDefault();
     e.stopPropagation();
