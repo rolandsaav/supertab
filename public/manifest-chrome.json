@@ -12,7 +12,6 @@
   "host_permissions": ["<all_urls>"],
   "commands": {
     "toggle-palette": {
-      "suggested_key": { "default": "F1" },
       "description": "Toggle the SuperTab palette"
     }
   },
