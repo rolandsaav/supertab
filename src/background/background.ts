@@ -2,6 +2,7 @@ import browser from 'webextension-polyfill';
 import { markVisited, forget, seed } from './visited';
 import { TOGGLE_PALETTE, sendPaletteCommand } from '../bridge/commands';
 import '../modules/search/background';
+import '../modules/downloads/background';
 
 /** Fire-and-forget a visited-set update, logging any failure. */
 function track(label: string, task: Promise<unknown>): void {
