@@ -10,6 +10,12 @@
   },
   "permissions": ["tabs", "storage", "bookmarks", "history"],
   "host_permissions": ["<all_urls>"],
+  "commands": {
+    "toggle-palette": {
+      "suggested_key": { "default": "F1" },
+      "description": "Toggle the SuperTab palette"
+    }
+  },
   "background": {
     "scripts": ["background.js"]
   },

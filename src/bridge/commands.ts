@@ -1,15 +1,9 @@
 import browser from 'webextension-polyfill';
 
-// Must stay identical to the `commands` key declared in public/manifest-chrome.json
-// and public/manifest-firefox.json. Those manifests are JSON and cannot import this
-// const, so the two are kept in sync by hand.
+// Must match the `commands` key in both manifests (JSON can't import this const).
 export const TOGGLE_PALETTE = 'toggle-palette';
 
-/**
- * Envelope for a background→content command. The literal `type` field keeps this
- * distinct from the RPC envelope (`{ module, op, args }` in ./rpc), so neither
- * listener ever mistakes one message for the other.
- */
+// Background→content envelope; the literal `type` keeps it distinct from the RPC envelope.
 export interface PaletteCommandMessage {
   type: 'supertab:command';
   name: string;
