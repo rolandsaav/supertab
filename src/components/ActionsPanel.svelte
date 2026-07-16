@@ -1,7 +1,7 @@
 <script lang="ts" generics="T">
   import { Command } from 'bits-ui';
   import type { Command as PaletteCommand } from '../commands/command';
-  import { autofocus, matchesShortcut } from './utils.svelte';
+  import { autofocus, matchAction } from './utils.svelte';
   import KeyCombo from './KeyCombo.svelte';
 
   interface Props {
@@ -17,7 +17,7 @@
   autofocus(() => inputRef);
 
   function onKeydown(e: KeyboardEvent): void {
-    const match = actions.find((action) => action.shortcut && matchesShortcut(e, action.shortcut));
+    const match = matchAction(e, actions);
     if (match) {
       e.preventDefault();
       onRun(match);

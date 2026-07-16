@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Item } from '../../search/parsers';
+  import type { Item } from './parsers';
   let { item }: { item: Item } = $props();
 </script>
 

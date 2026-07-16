@@ -1,5 +1,5 @@
-import { nav } from '../../shell/nav.svelte';
-import { status, toMessage } from '../../shell/status.svelte';
+import { nav } from '../nav.svelte';
+import { status, toMessage } from '../status.svelte';
 import type { Command } from '../../commands/command';
 
 /** Run a command against its subject: push a view, or perform an effect and then

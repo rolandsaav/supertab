@@ -1,12 +1,11 @@
 <script lang="ts" generics="T">
   import { Command } from 'bits-ui';
   import type { Snippet } from 'svelte';
-  import type { Command as PaletteCommand } from '../../commands/command';
-  import { getListContext } from './context';
+  import { getListContext, type RowActions } from './context';
 
   interface Props {
     id: string;
-    actions: PaletteCommand<T>[];
+    actions: RowActions<T>;
     /** Value passed to an action's perform; omit for void/root commands. */
     subject?: T;
     children: Snippet;

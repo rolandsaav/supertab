@@ -195,6 +195,38 @@
   overflow-y: auto;
 }
 
+/* Both scroll containers get a thin, theme-matched scrollbar with a transparent
+   track, so the popup shows through instead of the OS default's darker band. */
+.list,
+.actions-list {
+  scrollbar-width: thin; /* Firefox + Chromium 121+ */
+  scrollbar-color: var(--st-border) transparent;
+}
+
+/* WebKit / older Chromium equivalent of the above. */
+.list::-webkit-scrollbar,
+.actions-list::-webkit-scrollbar {
+  width: 0.75em;
+}
+.list::-webkit-scrollbar-track,
+.actions-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.list::-webkit-scrollbar-thumb,
+.actions-list::-webkit-scrollbar-thumb {
+  /* padding-box + transparent border insets the thumb off the edge. */
+  background: var(--st-border);
+  background-clip: padding-box;
+  border: 0.25em solid transparent;
+  border-radius: 1em;
+}
+.list::-webkit-scrollbar-thumb:hover,
+.actions-list::-webkit-scrollbar-thumb:hover {
+  background: var(--st-text-muted);
+  background-clip: padding-box;
+  border: 0.25em solid transparent;
+}
+
 /* Fixed height per row so the list can render an exact --st-rows count. */
 .item {
   display: flex;

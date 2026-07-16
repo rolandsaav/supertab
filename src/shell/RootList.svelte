@@ -1,6 +1,6 @@
 <script lang="ts">
-  import List from '../components/list/List.svelte';
-  import ListItem from '../components/list/ListItem.svelte';
+  import List from './list/List.svelte';
+  import ListItem from './list/ListItem.svelte';
   import CommandRow from './CommandRow.svelte';
   import { COMMANDS } from '../commands/registry';
   import { order } from '../lib/fuzzy';
@@ -20,7 +20,7 @@
 
 <List bind:query placeholder="Search for commands…">
   {#each visible as command (command.id)}
-    <ListItem id={command.id} actions={[command]}>
+    <ListItem id={command.id} actions={{ primary: command }}>
       <CommandRow {command} />
     </ListItem>
   {/each}

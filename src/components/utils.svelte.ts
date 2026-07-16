@@ -1,4 +1,4 @@
-import type { Shortcut } from '../commands/command';
+import type { Command, Shortcut } from '../commands/command';
 
 /** True on macOS, where the command modifier is ⌘ (metaKey) rather than Ctrl. */
 export const isMac =
@@ -31,13 +31,23 @@ export function matchesShortcut(e: KeyboardEvent, s: Shortcut): boolean {
   );
 }
 
-/** Translate Tab / Shift+Tab into ↑/↓ on the given input, for Command lists. */
-export function tabNav(e: KeyboardEvent, input: HTMLInputElement | null): void {
+/** The first action whose shortcut matches the event, if any. */
+export function matchAction<T>(e: KeyboardEvent, actions: Command<T>[]): Command<T> | undefined {
+  return actions.find((a) => a.shortcut && matchesShortcut(e, a.shortcut));
+}
+
+/**
+ * Move the Command list highlight on Tab / Shift+Tab. Delegates to bits-ui's own
+ * `updateSelectedByItem` (the method its arrow keys use), so it wraps with `loop`,
+ * skips disabled rows, and scrolls the selection into view — no synthetic events.
+ */
+export function tabNav(
+  e: KeyboardEvent,
+  command: { updateSelectedByItem: (change: number) => void } | null
+): void {
   if (e.key !== 'Tab') return;
   e.preventDefault();
-  input?.dispatchEvent(
-    new KeyboardEvent('keydown', { key: e.shiftKey ? 'ArrowUp' : 'ArrowDown', bubbles: true })
-  );
+  command?.updateSelectedByItem(e.shiftKey ? -1 : 1);
 }
 
 /** Focus the input on mount and whenever `shouldFocus()` becomes true. */

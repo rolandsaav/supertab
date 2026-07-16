@@ -1,14 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import List from '../../components/list/List.svelte';
-  import ListItem from '../../components/list/ListItem.svelte';
+  import List from '../../shell/list/List.svelte';
+  import ListItem from '../../shell/list/ListItem.svelte';
   import SourceIcons from './SourceIcons.svelte';
   import ItemRow from './ItemRow.svelte';
   import { searchApi } from './api';
   import { commandsForItem } from './commands';
   import { searchPlaceholder, parseSourceCommand } from './sources';
   import { status, toMessage } from '../../shell/status.svelte';
-  import type { Item, Kind, SourceToggles } from '../../search/parsers';
+  import type { Item, Kind, SourceToggles } from './parsers';
 
   let items = $state<Item[]>([]);
   let enabled = $state<SourceToggles>({ tab: true, bookmark: false, history: false });

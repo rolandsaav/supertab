@@ -48,24 +48,31 @@ src/
     view.ts               # the View (Strategy) type
     RootList.svelte       # the root command list — itself a module/view
     CommandRow.svelte     # the root list's row markup (rows are components)
+    list/                 # palette-core list primitives a view assembles itself (optional)
+      List.svelte         #   input + results + keyboard/footer/actions-panel machinery
+      ListItem.svelte     #   one row: registers its actions, forwards select/context-menu
+      context.ts          #   the List↔ListItem seam — action registry + primary/secondary helpers
+      run.ts              #   runCommand: view→push, perform→close|stay, error→status
   commands/
     command.ts            # the Command<T> contract (root entries AND per-item actions)
     factories.ts          # action()/openView() — build Commands without the run boilerplate
     registry.ts           # the root command list: [Search, …later modules] — the one wiring point
   modules/
-    search/               # the migrated search module
+    search/               # the search module — all of search lives here
       commands.ts         # every Command this module defines (launch command + per-item actions) ─┐
       Search.svelte       # the View (Strategy)                                                     │
-      ItemRow.svelte      # the module's result-row markup (rows are components)                    │ content context
-      api.ts              # the module's privileged interface + its content-side Proxy             ─┘
+      ItemRow.svelte      # the module's result-row markup                                          │
+      SourceIcons.svelte  # the source-toggle header chrome                                         │ content context
+      sources.ts          # source presentation metadata (icons/labels/@-commands)                  │
+      module.ts           # the module's identity string (RPC namespace + root-command id)         ─┘
+      api.ts              # the module's privileged interface + its content-side Proxy
       background.ts       # implements api.ts + owns bg state (the search cache) ── background context
+      parsers.ts          # raw tab/bookmark/history → Item ─┐
+      ranking.ts          # relevance ordering + result cap  │ search domain logic
+      search.ts           # pool + toggles + query → ranked  │ (framework-free)
+      providers.ts        # privileged per-source fetch()   ─┘
   components/
-    list/                 # composable list primitives a view assembles itself (optional)
-      List.svelte         #   input + results + keyboard/footer/actions-panel machinery
-      ListItem.svelte     #   one row: registers its actions, forwards select/context-menu
-      context.ts          #   the List↔ListItem seam — an action registry keyed by id
-      run.ts              #   runCommand: view→push, perform→close|stay, error→status
-    Footer, Key, ActionsPanel, … # shared chrome
+    Footer, Key, KeyCombo, ActionsPanel, … # presentational chrome (data in, markup out; no shell coupling)
   lib/
     fuzzy.ts              # generic uFuzzy ranking (order()) — no domain deps
   bridge/
@@ -107,9 +114,10 @@ export type CommandRun<T> =
 
 The `view | perform` discriminant lets the shell stay smart without knowing specifics: a
 `view` command pushes (never closes); a `perform` command respects `after` (default
-`'close'`). This collapses the old `primaryAction`/`actionsFor` into one convention: **a
-view's item-commands are a list; `[0]` is the primary (Enter) action, the rest fill the
-action panel, and any can carry a `shortcut`.** One type, one mental model.
+`'close'`). This collapses the old `primaryAction`/`actionsFor` into one shape: **a view
+gives each row a `RowActions<T>` — a required `primary` (run on Enter) plus optional
+`secondary` commands that fill the action panel; any can carry a `shortcut`.** Making
+`primary` required means a row can never be actionless. One type, one mental model.
 
 Raycast keeps root Commands and in-view Actions as separate concepts; we unify because our
 only real axis of difference is the subject, which the generic captures cleanly.
@@ -185,9 +193,11 @@ the registry. That's what lets views `import { nav }` directly with no cycle.
    `nav.setRoot(...)` at bootstrap and `open` takes a resolved `Command`, so nav never
    imports `RootList` or the registry. The `View` contract stays prop-free regardless.
 8. **One unified `Command<T>` type — no separate `Action`.** Root entries and per-item
-   actions are the same type, differing only by subject `T`. A view's item-commands are a
-   list; `[0]` is primary (Enter), the rest fill the action panel. Replaces
-   `primaryAction`/`actionsFor`.
+   actions are the same type, differing only by subject `T`. A view groups a row's
+   commands into `RowActions<T>` = `{ primary, secondary? }`: `primary` runs on Enter,
+   `secondary` fill the action panel. A required `primary` makes an actionless row
+   unrepresentable. Replaces `primaryAction`/`actionsFor` and the old `[0]`-is-primary
+   convention.
 9. **Module folder is four obvious files** — `commands.ts` (all Command definitions),
    `<Name>.svelte` (the View), `api.ts` (privileged interface + Proxy), `background.ts`
    (implements `api.ts`). `api ⇄ background` is the client/implementation pair.
@@ -277,10 +287,13 @@ consumer appears (Unload Tabs, Tab Groups), extract a shared `tabs` ops namespac
 
 ## List primitives
 
-`components/list/` is a small set of composable primitives a view assembles itself
+`shell/list/` is a small set of composable primitives a view assembles itself
 (Raycast-style), not one god-component configured by props. They back the list-shaped
 views (root list, search, future list-shaped modules) and are **optional** — a non-list
-module renders its own view and never touches them.
+module renders its own view and never touches them. They live under `shell/` rather than
+`components/` because they are palette-core: `List`/`run` read the `nav`/`footer`/`status`
+rune singletons directly, so they are shell internals, not portable UI. `components/` holds
+only presentational chrome that takes data and renders markup with no shell coupling.
 
 - **`List.svelte`** — the chrome: `Command.Root` + input + results, keyboard nav, the
   **back button** left of the input (shown when `nav.canPop`; click = Escape = `nav.pop()`),
@@ -289,11 +302,11 @@ module renders its own view and never touches them.
   `{#each}`**. Props: `placeholder`, `isLoading?`, `query?` (bindable — a module can rewrite
   the input, e.g. clear on an @-command), `header?` (chrome, e.g. search's source toggles),
   `onSearchChange?`, `onRefresh?`, `children`.
-- **`ListItem.svelte`** `<T>` — one row. Props: `id`, `actions: Command<T>[]` (`[0]` =
-  primary/Enter, the rest fill the panel), `subject?: T` (what an action's `perform`
-  receives — omitted for void/root commands), and `children` (the row markup, a module-owned
-  component like `CommandRow`/`ItemRow`). It registers `{subject, actions}` by `id` and
-  forwards select / right-click.
+- **`ListItem.svelte`** `<T>` — one row. Props: `id`, `actions: RowActions<T>` (a required
+  `primary`/Enter command plus optional `secondary` for the panel), `subject?: T` (what an
+  action's `perform` receives — omitted for void/root commands), and `children` (the row
+  markup, a module-owned component like `CommandRow`/`ItemRow`). It registers
+  `{subject, actions}` by `id` and forwards select / right-click.
 - **`context.ts`** — the seam. Because the module owns the `{#each}`, `List` learns a row's
   actions only by registration: each `ListItem` registers into a `SvelteMap` keyed by `id`;
   `List` reads the highlighted `id`'s entry to drive the footer, Enter, the ⌘↵ panel, and
@@ -332,7 +345,7 @@ row markup into small components like `ItemRow`), what it can do in the backgrou
 **`modules/search/api.ts`** — the contract + the client (content side):
 
 ```ts
-import type { Item, SourceToggles } from '../../search/parsers';
+import type { Item, SourceToggles } from './parsers';
 import { defineProxy } from '../../bridge/rpc';
 
 /** Privileged operations the search module runs in the background. */
@@ -355,7 +368,7 @@ import browser from 'webextension-polyfill';
 import { registerModule } from '../../bridge/rpc-background';
 import { SOURCES } from '../../search/sources';
 import { search, type SearchPool } from '../../search/search';
-import type { Kind, SourceToggles } from '../../search/parsers';
+import type { Kind, SourceToggles } from './parsers';
 import type { SearchApi } from './api';
 
 let cache: SearchPool = {};   // the search cache now lives with the module, not in background.ts
@@ -398,8 +411,8 @@ import X from '@lucide/svelte/icons/x';
 import Link from '@lucide/svelte/icons/link';
 import Copy from '@lucide/svelte/icons/copy';
 import SearchIcon from '@lucide/svelte/icons/search';
-import type { Command } from '../../commands/command';
-import type { Item } from '../../search/parsers';
+import type { RowActions } from '../../shell/list/context';
+import type { Item } from './parsers';
 import { action, openView } from '../../commands/factories';
 import { searchApi } from './api';
 import { MODULE } from './module';
@@ -420,21 +433,23 @@ const copyUrl = action<Item>({
   do: (item) => navigator.clipboard.writeText(item.url), after: 'stay'
 });
 
-/** Commands for a result — [0] is the primary (Enter) action, the rest fill the panel. */
-export function commandsForItem(item: Item): Command<Item>[] {
+/** A result's actions — the primary runs on Enter, the secondaries fill the panel. */
+export function commandsForItem(item: Item): RowActions<Item> {
   if (item.kind === 'tab') {
-    return [
-      action<Item>({ id: 'activate', title: 'Activate', icon: ArrowRight, do: (i) => searchApi.activateTab(i.id) }),
-      action<Item>({ id: 'close', title: 'Close Tab', icon: X, shortcut: { mod: true, key: 'Backspace' },
-        do: (i) => searchApi.closeTab(i.id), after: 'stay' }),
-      copyUrl,
-      action<Item>({ id: 'duplicate', title: 'Duplicate Tab', icon: Copy, do: (i) => searchApi.duplicateTab(i.id), after: 'stay' })
-    ];
+    return {
+      primary: action<Item>({ id: 'activate', title: 'Activate', icon: ArrowRight, do: (i) => searchApi.activateTab(i.id) }),
+      secondary: [
+        action<Item>({ id: 'close', title: 'Close Tab', icon: X, shortcut: { mod: true, key: 'Backspace' },
+          do: (i) => searchApi.closeTab(i.id), after: 'stay' }),
+        copyUrl,
+        action<Item>({ id: 'duplicate', title: 'Duplicate Tab', icon: Copy, do: (i) => searchApi.duplicateTab(i.id), after: 'stay' })
+      ]
+    };
   }
-  return [
-    action<Item>({ id: 'open', title: 'Open in New Tab', icon: ArrowRight, do: (i) => searchApi.openUrl(i.url) }),
-    copyUrl
-  ];
+  return {
+    primary: action<Item>({ id: 'open', title: 'Open in New Tab', icon: ArrowRight, do: (i) => searchApi.openUrl(i.url) }),
+    secondary: [copyUrl]
+  };
 }
 ```
 
@@ -444,13 +459,13 @@ handlers trimmed; the module owns the `{#each}` and its own data pipeline):
 ```svelte
 <script lang="ts">
   import { onMount } from 'svelte';
-  import List from '../../components/list/List.svelte';
-  import ListItem from '../../components/list/ListItem.svelte';
+  import List from '../../shell/list/List.svelte';
+  import ListItem from '../../shell/list/ListItem.svelte';
   import SourceIcons from './SourceIcons.svelte';
   import ItemRow from './ItemRow.svelte';
   import { searchApi } from './api';
   import { commandsForItem } from './commands';
-  import type { Item, SourceToggles } from '../../search/parsers';
+  import type { Item, SourceToggles } from './parsers';
 
   let items = $state<Item[]>([]);
   let enabled = $state<SourceToggles>({ tab: true, bookmark: false, history: false });

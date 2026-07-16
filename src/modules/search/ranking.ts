@@ -1,4 +1,4 @@
-import { order } from '../lib/fuzzy';
+import { order } from '../../lib/fuzzy';
 import type { Item } from './parsers';
 
 /** Max results surfaced to the UI — single home for the cap. */

@@ -2,7 +2,7 @@ import type { Component } from 'svelte';
 import AppWindow from '@lucide/svelte/icons/app-window';
 import Bookmark from '@lucide/svelte/icons/bookmark';
 import History from '@lucide/svelte/icons/history';
-import type { Kind, SourceToggles } from '../../search/parsers';
+import type { Kind, SourceToggles } from './parsers';
 
 interface SourceMeta {
   label: string;

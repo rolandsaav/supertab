@@ -4,12 +4,12 @@
   import { Command } from 'bits-ui';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import type { Command as PaletteCommand } from '../../commands/command';
-  import { nav } from '../../shell/nav.svelte';
-  import { footer } from '../../shell/footer.svelte';
-  import { autofocus, tabNav, matchesShortcut, OPEN_ACTIONS_SHORTCUT } from '../utils.svelte';
-  import ActionsPanel from '../ActionsPanel.svelte';
+  import { nav } from '../nav.svelte';
+  import { footer } from '../footer.svelte';
+  import { autofocus, tabNav, matchAction, matchesShortcut, OPEN_ACTIONS_SHORTCUT } from '../../components/utils.svelte';
+  import ActionsPanel from '../../components/ActionsPanel.svelte';
   import { runCommand } from './run';
-  import { LIST_KEY, type ListContext, type ItemEntry } from './context';
+  import { LIST_KEY, allActions, hasSecondaryActions, type ListContext, type ItemEntry } from './context';
 
   interface Props {
     placeholder: string;
@@ -36,6 +36,7 @@
   const registry = new SvelteMap<string, ItemEntry>();
   let highlightedId = $state('');
   let inputRef = $state<HTMLInputElement | null>(null);
+  let commandRoot = $state<ReturnType<typeof Command.Root> | null>(null);
   let actionsOpen = $state(false);
   let actionTargetId = $state('');
 
@@ -47,9 +48,9 @@
 
   // Keep the shell footer showing the highlighted row's primary action.
   $effect(() => {
-    const actions = highlightedEntry?.actions ?? [];
-    footer.primaryLabel = actions[0]?.title;
-    footer.hasActions = actions.length > 1;
+    const actions = highlightedEntry?.actions;
+    footer.primaryLabel = actions?.primary.title;
+    footer.hasActions = !!actions && hasSecondaryActions(actions);
   });
 
   // Own Escape only while the panel is open, so it closes before the shell steps back a view.
@@ -63,7 +64,8 @@
   });
 
   function openActions(id: string): void {
-    if (!registry.get(id)?.actions.length) return;
+    const actions = registry.get(id)?.actions;
+    if (!actions || !hasSecondaryActions(actions)) return;
     actionTargetId = id;
     actionsOpen = true;
   }
@@ -83,7 +85,7 @@
     unregister: (id) => registry.delete(id),
     select: (id) => {
       const entry = registry.get(id);
-      if (entry?.actions[0]) void runCommand(entry.actions[0], entry.subject, onRefresh);
+      if (entry) void runCommand(entry.actions.primary, entry.subject, onRefresh);
     },
     openActions
   });
@@ -101,18 +103,19 @@
     }
     const entry = highlightedEntry;
     if (entry) {
-      const match = entry.actions.find((c) => c.shortcut && matchesShortcut(e, c.shortcut));
+      const match = matchAction(e, allActions(entry.actions));
       if (match) {
         e.preventDefault();
         void runCommand(match, entry.subject, onRefresh);
         return;
       }
     }
-    tabNav(e, inputRef);
+    tabNav(e, commandRoot);
   }
 </script>
 
 <Command.Root
+  bind:this={commandRoot}
   shouldFilter={false}
   loop
   bind:value={highlightedId}
@@ -146,5 +149,5 @@
 </Command.Root>
 
 {#if actionsOpen && panelEntry}
-  <ActionsPanel actions={panelEntry.actions} onRun={runFromPanel} />
+  <ActionsPanel actions={allActions(panelEntry.actions)} onRun={runFromPanel} />
 {/if}

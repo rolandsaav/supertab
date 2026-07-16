@@ -1,8 +1,8 @@
 import browser from 'webextension-polyfill';
 import { registerModule } from '../../bridge/rpc-background';
-import { SOURCES } from '../../search/sources';
-import { search, type SearchPool } from '../../search/search';
-import type { Kind, SourceToggles } from '../../search/parsers';
+import { SOURCES } from './providers';
+import { search, type SearchPool } from './search';
+import type { Kind, SourceToggles } from './parsers';
 import type { SearchApi } from './api';
 import { MODULE } from './module';
 

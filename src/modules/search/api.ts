@@ -1,4 +1,4 @@
-import type { Item, SourceToggles } from '../../search/parsers';
+import type { Item, SourceToggles } from './parsers';
 import { defineProxy } from '../../bridge/rpc';
 import { MODULE } from './module';
 
